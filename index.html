@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Asistente del Ministerio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                DEFAULT: '#007AFF', // Un azul vibrante similar al de iOS
+                light: '#3395FF',
+                dark: '#005ECC',
+              },
+              // Light mode
+              background: '#F2F2F7',
+              surface: '#FFFFFF',
+              textPrimary: '#1C1C1E',
+              textSecondary: '#8A8A8E',
+              // Dark mode
+              darkBackground: '#000000',
+              darkSurface: '#1C1C1E',
+              darkTextPrimary: '#FFFFFF',
+              darkTextSecondary: '#8D8D92',
+              separator: '#E5E5EA',
+              darkSeparator: '#38383A',
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            borderRadius: {
+              'xl': '1rem',
+              '2xl': '1.25rem',
+              '3xl': '1.875rem',
+              '4xl': '2.5rem',
+            }
+          },
+        },
+      }
+    </script>
+    <script>
+      // Evita el "flash" del tema incorrecto al cargar
+      if (localStorage.isDarkMode === 'true' || (!('isDarkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react": "https://aistudiocdn.com/react@^19.1.1"
+  }
+}
+</script>
+</head>
+  <body class="bg-background dark:bg-darkBackground">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

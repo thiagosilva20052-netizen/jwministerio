@@ -1,0 +1,5 @@
+{
+  "name": "Asistente del Ministerio",
+  "description": "Una aplicación para Testigos de Jehová para organizar y llevar un registro de las actividades del ministerio, asignaciones en la escuela y deberes en la congregación. Funciona sin conexión.",
+  "requestFramePermissions": []
+}
