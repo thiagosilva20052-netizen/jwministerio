@@ -187,7 +187,7 @@ const ServiceLogView: React.FC<ServiceLogViewProps> = ({ entries, onAddOrUpdateE
           {i}
         </time>
         {hasEntry && (
-            <div className="mt-1 text-sm font-bold text-primary dark:text-primary-light">
+            <div className="mt-1.5 text-xs font-bold text-primary-dark dark:text-primary-light bg-primary/20 dark:bg-primary/30 px-2 py-0.5 rounded-full">
                 {entryForDay.hours % 1 === 0 ? `${entryForDay.hours}h` : `${entryForDay.hours.toFixed(1)}h`}
             </div>
         )}

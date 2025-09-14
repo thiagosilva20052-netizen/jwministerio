@@ -62,9 +62,24 @@ const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClo
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (reminderEnabled) {
+      if (!reminderDateTime) {
+        alert('Por favor, selecciona una fecha y hora válidas para el recordatorio.');
+        return;
+      }
+      const reminderDate = new Date(reminderDateTime);
+      const now = new Date();
+      if (reminderDate <= now) {
+        alert('La fecha del recordatorio no puede ser en el pasado. Por favor, elige una fecha futura.');
+        return;
+      }
+    }
+
     if (date && field1 && field2) {
       const baseData = {
         ...(initialData || {}),
+        id: initialData?.id,
         date,
         endDate: endDate || undefined,
         reminder: reminderEnabled ? reminderDateTime : undefined,
@@ -90,6 +105,8 @@ const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClo
 
   const handleReminderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isEnabled = e.target.checked;
+    // Request permission only if the user is enabling the reminder and the permission
+    // has not been granted or denied before (i.e., it's 'default').
     if (isEnabled && 'Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission();
     }
