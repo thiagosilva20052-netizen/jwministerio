@@ -227,15 +227,28 @@ const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClo
   );
 };
 
-interface AssignmentListProps {
-  items: Item[];
-  type: 'school' | 'duty';
-  onAddItem: (item: ItemWithoutId) => void;
-  onUpdateItem: (item: Item) => void;
+type BaseProps = {
   onDeleteItem: (id: string) => void;
-}
+};
 
-const AssignmentList: React.FC<AssignmentListProps> = ({ items, type, onAddItem, onUpdateItem, onDeleteItem }) => {
+type SchoolProps = BaseProps & {
+  items: SchoolAssignment[];
+  type: 'school';
+  onAddItem: (item: Omit<SchoolAssignment, 'id'>) => void;
+  onUpdateItem: (item: SchoolAssignment) => void;
+};
+
+type DutyProps = BaseProps & {
+  items: MeetingDuty[];
+  type: 'duty';
+  onAddItem: (item: Omit<MeetingDuty, 'id'>) => void;
+  onUpdateItem: (item: MeetingDuty) => void;
+};
+
+type AssignmentListProps = SchoolProps | DutyProps;
+
+const AssignmentList: React.FC<AssignmentListProps> = (props) => {
+  const { items, type, onDeleteItem } = props;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
 
@@ -251,14 +264,26 @@ const AssignmentList: React.FC<AssignmentListProps> = ({ items, type, onAddItem,
   
   const handleToggleComplete = (item: Item) => {
       const updatedItem = { ...item, completed: !item.completed };
-      onUpdateItem(updatedItem);
+      if (props.type === 'school' && 'student' in updatedItem) {
+        props.onUpdateItem(updatedItem);
+      } else if (props.type === 'duty' && 'person' in updatedItem) {
+        props.onUpdateItem(updatedItem);
+      }
   };
 
   const handleSubmit = (itemData: ItemWithoutId | Item) => {
-    if ('id' in itemData && itemData.id) {
-        onUpdateItem(itemData as Item);
-    } else {
-        onAddItem(itemData);
+    if (props.type === 'school' && 'student' in itemData) {
+      if ('id' in itemData && itemData.id) {
+        props.onUpdateItem(itemData);
+      } else {
+        props.onAddItem(itemData);
+      }
+    } else if (props.type === 'duty' && 'person' in itemData) {
+      if ('id' in itemData && itemData.id) {
+        props.onUpdateItem(itemData);
+      } else {
+        props.onAddItem(itemData);
+      }
     }
   };
   

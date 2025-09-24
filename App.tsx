@@ -106,16 +106,16 @@ const App: React.FC = () => {
         return <AssignmentList 
                   items={schoolAssignments}
                   type="school"
-                  onAddItem={addSchoolAssignment as any}
-                  onUpdateItem={updateSchoolAssignment as any}
+                  onAddItem={addSchoolAssignment}
+                  onUpdateItem={updateSchoolAssignment}
                   onDeleteItem={deleteSchoolAssignment}
                 />;
       case View.DUTIES:
         return <AssignmentList
                   items={meetingDuties}
                   type="duty"
-                  onAddItem={addMeetingDuty as any}
-                  onUpdateItem={updateMeetingDuty as any}
+                  onAddItem={addMeetingDuty}
+                  onUpdateItem={updateMeetingDuty}
                   onDeleteItem={deleteMeetingDuty}
                 />;
       case View.SERVICE_LOG:

@@ -353,14 +353,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ activities, onAddActivity, 
     setModalState('form');
   };
 
-  const handleOpenAddFormFromSummary = () => {
-      setEditingActivity(null);
-      setModalState('form');
-  };
-
-  const handleOpenEditFormFromSummary = (activity: MinistryActivity) => {
-      setEditingActivity(activity);
-      setModalState('form');
+  const handleTransitionToForm = (activity: MinistryActivity | null) => {
+    setEditingActivity(activity);
+    setModalState('form');
   };
 
   const changeMonth = (offset: number) => {
@@ -413,9 +408,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ activities, onAddActivity, 
         onClose={() => setModalState('closed')}
         selectedDate={selectedDate}
         activities={activitiesForSelectedDate}
-        onAdd={handleOpenAddFormFromSummary}
-        // FIX: Corrected typo from handleOpenEditFormFromsummary to handleOpenEditFormFromSummary
-        onEdit={handleOpenEditFormFromSummary}
+        onAdd={() => handleTransitionToForm(null)}
+        onEdit={handleTransitionToForm}
       />
 
       <button onClick={handleAddClick} className="fixed bottom-28 right-5 bg-primary hover:bg-primary-dark text-white rounded-2xl p-4 shadow-lg shadow-primary/40 z-20 transform transition-transform hover:scale-105 active:scale-95">
