@@ -16,6 +16,7 @@ const ServiceFormModal: React.FC<ServiceFormModalProps> = ({ isOpen, onClose, on
   const [placements, setPlacements] = useState<number | ''>('');
   const [videos, setVideos] = useState<number | ''>('');
   const [returnVisits, setReturnVisits] = useState<number | ''>('');
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -49,14 +50,18 @@ const ServiceFormModal: React.FC<ServiceFormModalProps> = ({ isOpen, onClose, on
   };
 
   const handleDelete = () => {
-    if (initialData && window.confirm('¿Estás seguro de que quieres eliminar este registro?')) {
+    setIsConfirmOpen(true);
+  };
+  
+  const handleConfirmDelete = () => {
+    if (initialData) {
       onDelete(initialData.id);
       onClose();
     }
   };
 
   return (
-    <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-end z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={onClose}>
+    <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-end z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={!isConfirmOpen ? onClose : undefined}>
       <div className={`bg-surface dark:bg-darkSurface p-5 pb-8 rounded-t-3xl shadow-xl w-full max-w-md transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
         <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-5"></div>
         <h2 className="text-2xl font-bold mb-5 text-textPrimary dark:text-darkTextPrimary">{initialData ? 'Editar Registro' : 'Añadir Registro'}</h2>
@@ -93,6 +98,29 @@ const ServiceFormModal: React.FC<ServiceFormModalProps> = ({ isOpen, onClose, on
           </div>
         </form>
       </div>
+      
+      {isConfirmOpen && (
+        <div className="absolute inset-0 bg-black/60 flex justify-center items-center z-40" onClick={() => setIsConfirmOpen(false)}>
+            <div className="bg-surface dark:bg-darkSurface p-6 rounded-3xl shadow-xl w-full max-w-sm m-4 animate-[fade-in_0.2s_ease-out]" onClick={e => e.stopPropagation()}>
+                <h2 className="text-xl font-bold text-center mb-2 text-textPrimary dark:text-darkTextPrimary">Confirmar Eliminación</h2>
+                <p className="text-center text-textSecondary dark:text-darkTextSecondary mb-6">¿Estás seguro de que quieres eliminar este registro? Esta acción no se puede deshacer.</p>
+                <div className="flex flex-col gap-3">
+                    <button
+                        onClick={handleConfirmDelete}
+                        className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-5 rounded-full transition-colors active:scale-95"
+                    >
+                        Eliminar
+                    </button>
+                    <button
+                        onClick={() => setIsConfirmOpen(false)}
+                        className="w-full bg-gray-500/15 text-textPrimary dark:text-darkTextPrimary font-bold py-3 px-5 rounded-full hover:bg-gray-500/25 transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };

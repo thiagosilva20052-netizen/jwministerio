@@ -21,6 +21,8 @@ const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClo
   const [field2, setField2] = useState(''); // assignment or duty
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderDateTime, setReminderDateTime] = useState('');
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
 
   const getDefaultReminderTime = (dateStr: string) => {
     const d = dateStr ? new Date(dateStr + 'T00:00:00') : new Date();
@@ -57,6 +59,7 @@ const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClo
         setReminderEnabled(false);
         setReminderDateTime(getDefaultReminderTime(today));
       }
+      setNotificationMessage(null);
     }
   }, [initialData, isOpen, type]);
 
@@ -97,21 +100,51 @@ const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClo
   };
 
   const handleDelete = () => {
-    if (initialData && window.confirm('¿Estás seguro de que quieres eliminar este elemento?')) {
+    setIsConfirmOpen(true);
+  };
+  
+  const handleConfirmDelete = () => {
+    if (initialData) {
       onDelete(initialData.id);
       onClose();
     }
   };
 
-  const handleReminderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleReminderChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const isEnabled = e.target.checked;
-    // Request permission only if the user is enabling the reminder and the permission
-    // has not been granted or denied before (i.e., it's 'default').
-    if (isEnabled && 'Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
+    setNotificationMessage(null);
+
+    if (!isEnabled) {
+      setReminderEnabled(false);
+      return;
     }
-    setReminderEnabled(isEnabled);
-  }
+
+    if (!('Notification' in window)) {
+      setNotificationMessage('Este navegador no soporta notificaciones.');
+      e.target.checked = false;
+      return;
+    }
+
+    let permission = Notification.permission;
+    
+    if (permission === 'denied') {
+      setNotificationMessage('Las notificaciones están bloqueadas. Para habilitarlas, busca el icono del candado (🔒) en la barra de direcciones de tu navegador, haz clic en él y permite las notificaciones para este sitio.');
+      e.target.checked = false;
+      return;
+    }
+
+    if (permission === 'default') {
+      permission = await Notification.requestPermission();
+    }
+
+    if (permission === 'granted') {
+      setReminderEnabled(true);
+    } else {
+      setReminderEnabled(false);
+      setNotificationMessage('Permiso denegado. Para recibir recordatorios, necesitas permitir las notificaciones.');
+      e.target.checked = false;
+    }
+  };
 
   const title = initialData ? 'Editar' : 'Añadir';
   const typeTitle = type === 'school' ? 'Asignación' : 'Deber';
@@ -119,7 +152,7 @@ const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClo
   const field2Label = type === 'school' ? 'Asignación' : 'Deber';
 
   return (
-     <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-end z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={onClose}>
+     <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-end z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={!isConfirmOpen ? onClose : undefined}>
       <div className={`bg-surface dark:bg-darkSurface p-5 pb-8 rounded-t-3xl shadow-xl w-full max-w-md transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
          <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-5"></div>
         <h2 className="text-2xl font-bold mb-5 text-textPrimary dark:text-darkTextPrimary">{`${title} ${typeTitle}`}</h2>
@@ -140,11 +173,16 @@ const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClo
             <label className="block text-textSecondary dark:text-darkTextSecondary text-sm font-medium mb-2" htmlFor="field2">{field2Label}</label>
             <input id="field2" type="text" value={field2} onChange={e => setField2(e.target.value)} required className="appearance-none border border-separator dark:border-darkSeparator rounded-xl w-full py-3 px-4 text-textPrimary dark:text-darkTextPrimary bg-surface dark:bg-darkSurface leading-tight focus:outline-none focus:ring-2 focus:ring-primary" />
           </div>
-          <div className="pt-2">
+          <div className="pt-2 space-y-3">
             <label className="flex items-center space-x-3 text-sm font-medium text-textSecondary dark:text-darkTextSecondary">
               <input type="checkbox" checked={reminderEnabled} onChange={handleReminderChange} className="form-checkbox h-5 w-5 text-primary rounded-md focus:ring-primary border-separator dark:border-darkSeparator bg-surface dark:bg-darkSurface" />
               <span>Activar recordatorio</span>
             </label>
+            {notificationMessage && (
+                <div className="bg-amber-500/15 p-3 rounded-xl">
+                    <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">{notificationMessage}</p>
+                </div>
+            )}
           </div>
           {reminderEnabled && (
             <div className="pt-2">
@@ -162,6 +200,29 @@ const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClo
           </div>
         </form>
       </div>
+
+      {isConfirmOpen && (
+        <div className="absolute inset-0 bg-black/60 flex justify-center items-center z-40" onClick={() => setIsConfirmOpen(false)}>
+            <div className="bg-surface dark:bg-darkSurface p-6 rounded-3xl shadow-xl w-full max-w-sm m-4 animate-[fade-in_0.2s_ease-out]" onClick={e => e.stopPropagation()}>
+                <h2 className="text-xl font-bold text-center mb-2 text-textPrimary dark:text-darkTextPrimary">Confirmar Eliminación</h2>
+                <p className="text-center text-textSecondary dark:text-darkTextSecondary mb-6">¿Estás seguro de que quieres eliminar este elemento? Esta acción no se puede deshacer.</p>
+                <div className="flex flex-col gap-3">
+                    <button
+                        onClick={handleConfirmDelete}
+                        className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-5 rounded-full transition-colors active:scale-95"
+                    >
+                        Eliminar
+                    </button>
+                    <button
+                        onClick={() => setIsConfirmOpen(false)}
+                        className="w-full bg-gray-500/15 text-textPrimary dark:text-darkTextPrimary font-bold py-3 px-5 rounded-full hover:bg-gray-500/25 transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -211,7 +272,7 @@ const AssignmentList: React.FC<AssignmentListProps> = ({ items, type, onAddItem,
     const completed = items.filter(item => item.completed);
 
     pending.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    completed.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    completed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Most recent completed first
     
     return { pendingItems: pending, completedItems: completed };
   }, [items]);
@@ -261,7 +322,7 @@ const AssignmentList: React.FC<AssignmentListProps> = ({ items, type, onAddItem,
             </div>
         </div>
         <div className="flex items-center space-x-1 flex-shrink-0 pl-2">
-           {item.reminder && !item.completed && <BellIcon className="h-5 w-5 text-amber-500" />}
+           {item.reminder && <BellIcon className="h-5 w-5 text-amber-500" />}
           <button onClick={() => handleEdit(item)} className="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary">
             <PencilIcon className="h-5 w-5" />
           </button>
@@ -281,16 +342,16 @@ const AssignmentList: React.FC<AssignmentListProps> = ({ items, type, onAddItem,
         <>
             {Object.entries(groupedPendingItems).map(([date, itemsForDate]) => (
               <div key={date}>
-                <h3 className="text-sm font-bold text-textSecondary dark:text-darkTextSecondary tracking-wide uppercase pb-3 px-1">{date}</h3>
+                <h3 className="text-sm font-bold text-textSecondary dark:text-darkTextSecondary tracking-wide uppercase pb-3 px-1 capitalize">{date}</h3>
                 <div className="space-y-3">
-                  {itemsForDate.map(item => renderItem(item))}
+                  {(itemsForDate as Item[]).map(item => renderItem(item))}
                 </div>
               </div>
             ))}
             
             {completedItems.length > 0 && (
                 <div className="pt-6">
-                    <h3 className="text-sm font-bold text-textSecondary dark:text-darkTextSecondary tracking-wide uppercase pb-3 px-1 border-t-2 border-separator dark:border-darkSeparator">Completadas</h3>
+                    <h3 className="text-sm font-bold text-textSecondary dark:text-darkTextSecondary tracking-wide uppercase pb-3 px-1 border-t-2 border-separator dark:border-darkSeparator pt-6">Completadas</h3>
                     <div className="space-y-3">
                         {completedItems.map(item => renderItem(item))}
                     </div>

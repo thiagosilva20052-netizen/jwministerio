@@ -7,6 +7,7 @@ import BottomNav from './components/BottomNav';
 import CalendarView from './components/CalendarView';
 import AssignmentList from './components/AssignmentList';
 import ServiceLogView from './components/ServiceLogView';
+import AssistantModal from './components/AssistantModal';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.CALENDAR);
@@ -14,9 +15,11 @@ const App: React.FC = () => {
   const [schoolAssignments, setSchoolAssignments] = useLocalStorage<SchoolAssignment[]>('schoolAssignments', []);
   const [meetingDuties, setMeetingDuties] = useLocalStorage<MeetingDuty[]>('meetingDuties', []);
   const [serviceEntries, setServiceEntries] = useLocalStorage<ServiceEntry[]>('serviceEntries', []);
+  const [appTitle, setAppTitle] = useLocalStorage<string>('appTitle', 'Asistente del Ministerio');
 
   const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const [isDarkMode, setIsDarkMode] = useLocalStorage<boolean>('isDarkMode', prefersDarkMode);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
 
   useReminders(ministryActivities, schoolAssignments, meetingDuties);
 
@@ -129,13 +132,21 @@ const App: React.FC = () => {
   return (
     <div className="h-screen w-screen bg-transparent font-sans flex items-center justify-center p-0 sm:p-4">
       <div className="max-w-md mx-auto h-full w-full bg-surface dark:bg-darkBackground shadow-2xl shadow-slate-400/30 dark:shadow-black/60 relative overflow-hidden flex flex-col sm:h-[95vh] sm:rounded-3xl">
-        <Header title={viewTitles[currentView]} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
+        <Header 
+          appTitle={appTitle}
+          setAppTitle={setAppTitle}
+          viewTitle={viewTitles[currentView]} 
+          isDarkMode={isDarkMode} 
+          setIsDarkMode={setIsDarkMode} 
+          onToggleAssistant={() => setIsAssistantOpen(prev => !prev)}
+        />
         <main className="flex-grow pt-24 pb-[88px] overflow-y-auto overscroll-contain">
            <div key={currentView}>
              {renderContent()}
            </div>
         </main>
         <BottomNav currentView={currentView} setView={setCurrentView} />
+        <AssistantModal isOpen={isAssistantOpen} onClose={() => setIsAssistantOpen(false)} />
       </div>
     </div>
   );

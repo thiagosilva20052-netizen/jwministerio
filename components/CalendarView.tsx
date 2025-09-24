@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MinistryActivity, Shift } from '../types';
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon } from './icons';
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon, PencilIcon, BellIcon } from './icons';
 
 interface CalendarViewProps {
   activities: MinistryActivity[];
@@ -23,6 +23,8 @@ const MinistryFormModal: React.FC<{
   const [description, setDescription] = useState('');
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderDateTime, setReminderDateTime] = useState('');
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
 
   const getDefaultReminderTime = (date: string) => {
     const d = new Date(date + 'T00:00:00');
@@ -53,6 +55,7 @@ const MinistryFormModal: React.FC<{
         setReminderEnabled(false);
         setReminderDateTime(getDefaultReminderTime(selectedDate));
       }
+      setNotificationMessage(null);
     }
   }, [initialData, isOpen, selectedDate]);
   
@@ -61,7 +64,7 @@ const MinistryFormModal: React.FC<{
 
     if (reminderEnabled) {
       if (!reminderDateTime) {
-        alert('Por favor, selecciona una fecha y hora válidas для el recordatorio.');
+        alert('Por favor, selecciona una fecha y hora válidas para el recordatorio.');
         return;
       }
       const reminderDate = new Date(reminderDateTime);
@@ -88,24 +91,54 @@ const MinistryFormModal: React.FC<{
   };
 
   const handleDelete = () => {
-    if (initialData && window.confirm('¿Estás seguro de que quieres eliminar esta actividad?')) {
+    setIsConfirmOpen(true);
+  };
+  
+  const handleConfirmDelete = () => {
+    if (initialData) {
       onDelete(initialData.id);
       onClose();
     }
   };
   
-  const handleReminderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleReminderChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const isEnabled = e.target.checked;
-    // Request permission only if the user is enabling the reminder and the permission
-    // has not been granted or denied before (i.e., it's 'default').
-    if (isEnabled && 'Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
+    setNotificationMessage(null);
+
+    if (!isEnabled) {
+      setReminderEnabled(false);
+      return;
     }
-    setReminderEnabled(isEnabled);
-  }
+
+    if (!('Notification' in window)) {
+      setNotificationMessage('Este navegador no soporta notificaciones.');
+      e.target.checked = false;
+      return;
+    }
+
+    let permission = Notification.permission;
+    
+    if (permission === 'denied') {
+      setNotificationMessage('Las notificaciones están bloqueadas. Para habilitarlas, busca el icono del candado (🔒) en la barra de direcciones de tu navegador, haz clic en él y permite las notificaciones para este sitio.');
+      e.target.checked = false;
+      return;
+    }
+
+    if (permission === 'default') {
+      permission = await Notification.requestPermission();
+    }
+
+    if (permission === 'granted') {
+      setReminderEnabled(true);
+    } else {
+      setReminderEnabled(false);
+      setNotificationMessage('Permiso denegado. Para recibir recordatorios, necesitas permitir las notificaciones.');
+      e.target.checked = false;
+    }
+  };
 
   return (
-    <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-end z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={onClose}>
+    <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-end z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={!isConfirmOpen ? onClose : undefined}>
       <div className={`bg-surface dark:bg-darkSurface p-5 pb-8 rounded-t-3xl shadow-xl w-full max-w-md transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
         <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-5"></div>
         <h2 className="text-2xl font-bold mb-5 text-textPrimary dark:text-darkTextPrimary">{initialData ? 'Editar Actividad' : 'Añadir Actividad'}</h2>
@@ -140,7 +173,7 @@ const MinistryFormModal: React.FC<{
               <option value={Shift.AFTERNOON}>Tarde</option>
             </select>
           </div>
-           <div className="pt-2">
+           <div className="pt-2 space-y-3">
             <label className="flex items-center space-x-3 text-sm font-medium text-textSecondary dark:text-darkTextSecondary">
               <input
                 type="checkbox"
@@ -150,6 +183,11 @@ const MinistryFormModal: React.FC<{
               />
               <span>Activar recordatorio</span>
             </label>
+             {notificationMessage && (
+                <div className="bg-amber-500/15 p-3 rounded-xl">
+                    <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">{notificationMessage}</p>
+                </div>
+            )}
           </div>
           {reminderEnabled && (
             <div className="pt-2">
@@ -173,14 +211,98 @@ const MinistryFormModal: React.FC<{
           </div>
         </form>
       </div>
+
+      {isConfirmOpen && (
+        <div className="absolute inset-0 bg-black/60 flex justify-center items-center z-40" onClick={() => setIsConfirmOpen(false)}>
+            <div className="bg-surface dark:bg-darkSurface p-6 rounded-3xl shadow-xl w-full max-w-sm m-4 animate-[fade-in_0.2s_ease-out]" onClick={e => e.stopPropagation()}>
+                <h2 className="text-xl font-bold text-center mb-2 text-textPrimary dark:text-darkTextPrimary">Confirmar Eliminación</h2>
+                <p className="text-center text-textSecondary dark:text-darkTextSecondary mb-6">¿Estás seguro de que quieres eliminar esta actividad? Esta acción no se puede deshacer.</p>
+                <div className="flex flex-col gap-3">
+                    <button
+                        onClick={handleConfirmDelete}
+                        className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-5 rounded-full transition-colors active:scale-95"
+                    >
+                        Eliminar
+                    </button>
+                    <button
+                        onClick={() => setIsConfirmOpen(false)}
+                        className="w-full bg-gray-500/15 text-textPrimary dark:text-darkTextPrimary font-bold py-3 px-5 rounded-full hover:bg-gray-500/25 transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
+};
+
+const DaySummaryModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  selectedDate: string;
+  activities: MinistryActivity[];
+  onAdd: () => void;
+  onEdit: (activity: MinistryActivity) => void;
+}> = ({ isOpen, onClose, selectedDate, activities, onAdd, onEdit }) => {
+    if (!isOpen) return null;
+
+    const date = new Date(selectedDate + 'T00:00:00');
+    const formattedDate = date.toLocaleDateString('es-ES', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long'
+    });
+
+    return (
+        <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-end z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={onClose}>
+            <div className={`bg-surface dark:bg-darkSurface p-5 pb-8 rounded-t-3xl shadow-xl w-full max-w-md transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
+                <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-5"></div>
+                <h2 className="text-2xl font-bold mb-1 text-textPrimary dark:text-darkTextPrimary">Resumen del Día</h2>
+                <p className="text-textSecondary dark:text-darkTextSecondary mb-5 capitalize">{formattedDate}</p>
+
+                <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-2 -mr-2">
+                    {activities.map(activity => (
+                        <div key={activity.id} className="bg-background dark:bg-darkBackground p-4 rounded-xl flex items-center justify-between">
+                            <div className="min-w-0 flex-grow">
+                                <div className="flex items-center space-x-2 mb-1">
+                                    <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${activity.shift === Shift.MORNING ? 'bg-blue-500/20 text-blue-600 dark:text-blue-300' : 'bg-orange-500/20 text-orange-600 dark:text-orange-300'}`}>
+                                        {activity.shift === Shift.MORNING ? 'Mañana' : 'Tarde'}
+                                    </span>
+                                    <h3 className="font-bold text-textPrimary dark:text-darkTextPrimary truncate">{activity.territory}</h3>
+                                </div>
+                                <p className="text-sm text-textSecondary dark:text-darkTextSecondary truncate">Dirige: {activity.leader}</p>
+                                {activity.description && <p className="text-sm text-textSecondary dark:text-darkTextSecondary mt-1 italic">"{activity.description}"</p>}
+                            </div>
+                            <div className="flex items-center flex-shrink-0 ml-2">
+                                {activity.reminder && (
+                                    <BellIcon className="h-5 w-5 text-amber-500 mr-1" />
+                                )}
+                                <button onClick={() => onEdit(activity)} className="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary">
+                                    <PencilIcon className="h-5 w-5" />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="mt-6 flex flex-col gap-3">
+                    <button onClick={onAdd} className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 px-5 rounded-full flex items-center justify-center gap-2 transition-transform active:scale-95">
+                        <PlusIcon className="h-5 w-5" />
+                        Añadir Actividad
+                    </button>
+                    <button type="button" onClick={onClose} className="w-full bg-gray-500/15 text-textSecondary dark:text-darkTextSecondary font-bold py-3 px-5 rounded-full hover:bg-gray-500/25 transition-colors">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 
 const CalendarView: React.FC<CalendarViewProps> = ({ activities, onAddActivity, onUpdateActivity, onDeleteActivity }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalState, setModalState] = useState<'closed' | 'summary' | 'form'>('closed');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [editingActivity, setEditingActivity] = useState<MinistryActivity | null>(null);
 
@@ -188,6 +310,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ activities, onAddActivity, 
   const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
   const daysInMonth = endOfMonth.getDate();
   const startDayOfWeek = (startOfMonth.getDay() + 6) % 7; // Lunes = 0
+  
+  const activitiesForSelectedDate = activities.filter(a => a.date === selectedDate);
 
   const days = Array.from({ length: startDayOfWeek }, (_, i) => <div key={`empty-${i}`} className=""></div>);
 
@@ -203,33 +327,41 @@ const CalendarView: React.FC<CalendarViewProps> = ({ activities, onAddActivity, 
           {isToday && <span className="absolute inset-0 rounded-full ring-2 ring-primary/70"></span>}
           {i}
         </time>
-        <div className="flex items-center space-x-1 mt-2">
-          {activitiesForDay.map(activity => (
-            <div key={activity.id} onClick={(e) => { e.stopPropagation(); handleEditActivity(activity) }} className={`w-1.5 h-1.5 rounded-full ${activity.shift === Shift.MORNING ? 'bg-blue-500' : 'bg-orange-500'}`}>
-            </div>
-          ))}
-        </div>
+        {activitiesForDay.length > 0 && (
+          <p className="text-xs text-center font-semibold text-primary-dark dark:text-primary-light mt-1 px-1 truncate w-full">
+            {activitiesForDay[0].territory}
+          </p>
+        )}
       </div>
     );
   }
 
   const handleDateClick = (date: string) => {
+    const activitiesForDay = activities.filter(a => a.date === date);
     setSelectedDate(date);
     setEditingActivity(null);
-    setIsModalOpen(true);
+    if (activitiesForDay.length > 0) {
+        setModalState('summary');
+    } else {
+        setModalState('form');
+    }
   };
   
   const handleAddClick = () => {
     setSelectedDate(new Date().toISOString().split('T')[0]);
     setEditingActivity(null);
-    setIsModalOpen(true);
+    setModalState('form');
   };
 
-  const handleEditActivity = (activity: MinistryActivity) => {
-    setSelectedDate(activity.date);
-    setEditingActivity(activity);
-    setIsModalOpen(true);
-  }
+  const handleOpenAddFormFromSummary = () => {
+      setEditingActivity(null);
+      setModalState('form');
+  };
+
+  const handleOpenEditFormFromSummary = (activity: MinistryActivity) => {
+      setEditingActivity(activity);
+      setModalState('form');
+  };
 
   const changeMonth = (offset: number) => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1));
@@ -268,14 +400,24 @@ const CalendarView: React.FC<CalendarViewProps> = ({ activities, onAddActivity, 
       </div>
       
       <MinistryFormModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={modalState === 'form'}
+        onClose={() => setModalState('closed')}
         onSubmit={handleSubmit}
         onDelete={onDeleteActivity}
         initialData={editingActivity}
         selectedDate={selectedDate}
       />
       
+      <DaySummaryModal
+        isOpen={modalState === 'summary'}
+        onClose={() => setModalState('closed')}
+        selectedDate={selectedDate}
+        activities={activitiesForSelectedDate}
+        onAdd={handleOpenAddFormFromSummary}
+        // FIX: Corrected typo from handleOpenEditFormFromsummary to handleOpenEditFormFromSummary
+        onEdit={handleOpenEditFormFromSummary}
+      />
+
       <button onClick={handleAddClick} className="fixed bottom-28 right-5 bg-primary hover:bg-primary-dark text-white rounded-2xl p-4 shadow-lg shadow-primary/40 z-20 transform transition-transform hover:scale-105 active:scale-95">
         <PlusIcon className="h-7 w-7" />
       </button>
