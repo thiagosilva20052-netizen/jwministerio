@@ -156,6 +156,27 @@ const ServiceLogView: React.FC<ServiceLogViewProps> = ({ entries, onAddOrUpdateE
     return { totalHoursThisMonth: totalHours, progressPercentage: progress, remainingHours: remaining };
   }, [entries, currentDate]);
 
+  const { chartData, maxHours } = useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    const data = Array.from({ length: daysInMonth }, (_, i) => {
+        const day = i + 1;
+        const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const entry = entries.find(e => e.date === dateString);
+        return {
+            day: day,
+            hours: entry?.hours || 0,
+        };
+    });
+
+    const max = Math.max(...data.map(d => d.hours));
+    const calculatedMax = max > 0 ? Math.max(max, 2) : 1; 
+    
+    return { chartData: data, maxHours: calculatedMax };
+  }, [entries, currentDate]);
+
   const weeklyTotals = useMemo(() => {
     const today = new Date();
     const isCurrentMonthView = today.getFullYear() === currentDate.getFullYear() && today.getMonth() === currentDate.getMonth();
@@ -262,17 +283,49 @@ const ServiceLogView: React.FC<ServiceLogViewProps> = ({ entries, onAddOrUpdateE
         </div>
       </div>
       
-      <div className="bg-surface dark:bg-darkSurface shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-2xl p-4 mb-6">
-        <h3 className="font-bold text-lg text-textPrimary dark:text-darkTextPrimary mb-3">Progreso Mensual</h3>
-        <div className="w-full bg-gray-200 dark:bg-darkSurface rounded-full h-2.5 mb-2">
+      <div className="bg-surface dark:bg-darkSurface shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-2xl p-5 mb-6">
+        <h3 className="font-bold text-lg text-textPrimary dark:text-darkTextPrimary mb-4 text-center">Progreso Mensual</h3>
+        <div className="text-center mb-4">
+          <span className="text-6xl font-extrabold text-primary dark:text-primary-light tracking-tight">{totalHoursThisMonth.toFixed(1)}</span>
+          <span className="text-xl font-semibold text-textSecondary dark:text-darkTextSecondary ml-1.5">horas</span>
+        </div>
+        <div className="w-full bg-background dark:bg-darkBackground rounded-full h-2.5 mb-2">
             <div className="bg-primary h-2.5 rounded-full" style={{ width: `${progressPercentage}%` }}></div>
         </div>
         <div className="flex justify-between text-sm font-medium text-textSecondary dark:text-darkTextSecondary">
-            <span>{totalHoursThisMonth.toFixed(1)}h de {MONTHLY_GOAL}h</span>
+            <span>Meta: {MONTHLY_GOAL}h</span>
             <span>Faltan {remainingHours.toFixed(1)}h</span>
         </div>
       </div>
       
+      <div className="bg-surface dark:bg-darkSurface shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-2xl p-5 mb-6">
+        <h3 className="font-bold text-lg text-textPrimary dark:text-darkTextPrimary mb-4">Actividad del Mes</h3>
+        <div className="h-40 flex items-end justify-between gap-px border-b border-separator dark:border-darkSeparator pb-2" role="figure" aria-label="Gráfico de horas de servicio diarias">
+          {chartData.map(item => (
+            <div key={item.day} className="flex-1 h-full flex flex-col items-center justify-end group relative pt-8">
+              <div 
+                className="w-[60%] max-w-[15px] bg-primary/70 rounded-t transition-all duration-300 ease-out group-hover:bg-primary"
+                style={{ height: `${item.hours > 0 ? Math.max((item.hours / maxHours) * 100, 4) : 0}%` }}
+                title={`Día ${item.day}: ${item.hours.toFixed(1)}h`}
+              >
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max px-2 py-1 bg-darkBackground dark:bg-darkSurface text-white dark:text-darkTextPrimary text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
+                  {item.hours.toFixed(1)}h
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="w-full flex items-start justify-between gap-px mt-1">
+          {chartData.map(item => (
+            <div key={item.day} className="flex-1 text-center">
+              <span className="text-[10px] text-textSecondary dark:text-darkTextSecondary font-medium">
+                {(item.day === 1 || item.day % 5 === 0) ? item.day : ''}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="bg-surface dark:bg-darkSurface shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-2xl p-4 mb-6">
         <h3 className="font-bold text-lg text-textPrimary dark:text-darkTextPrimary mb-3">Resumen Semanal</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">

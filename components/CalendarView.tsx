@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { MinistryActivity, Shift } from '../types';
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon, PencilIcon, BellIcon } from './icons';
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon, PencilIcon, BellIcon, SparklesIcon } from './icons';
+import AIImportModal from './AIImportModal';
+
 
 interface CalendarViewProps {
   activities: MinistryActivity[];
@@ -305,6 +307,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ activities, onAddActivity, 
   const [modalState, setModalState] = useState<'closed' | 'summary' | 'form'>('closed');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [editingActivity, setEditingActivity] = useState<MinistryActivity | null>(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
   const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
@@ -369,6 +372,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({ activities, onAddActivity, 
         onAddActivity(activityData);
     }
   };
+  
+  const handleImport = (activitiesToImport: Omit<MinistryActivity, 'id'>[]) => {
+    activitiesToImport.forEach(activity => {
+      onAddActivity(activity);
+    });
+    setIsImportModalOpen(false);
+  };
 
   const weekdays = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'];
 
@@ -379,6 +389,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ activities, onAddActivity, 
           {currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase())}
         </h2>
         <div className="flex items-center space-x-1">
+          <button onClick={() => setIsImportModalOpen(true)} className="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary transition-colors" aria-label="Importar con IA">
+            <SparklesIcon className="h-6 w-6" />
+          </button>
           <button onClick={() => changeMonth(-1)} className="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary transition-colors"><ChevronLeftIcon className="h-6 w-6" /></button>
           <button onClick={() => changeMonth(1)} className="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary transition-colors"><ChevronRightIcon className="h-6 w-6" /></button>
         </div>
@@ -410,6 +423,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({ activities, onAddActivity, 
         activities={activitiesForSelectedDate}
         onAdd={() => handleTransitionToForm(null)}
         onEdit={handleTransitionToForm}
+      />
+
+      <AIImportModal 
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={handleImport}
       />
 
       <button onClick={handleAddClick} className="fixed bottom-28 right-5 bg-primary hover:bg-primary-dark text-white rounded-2xl p-4 shadow-lg shadow-primary/40 z-20 transform transition-transform hover:scale-105 active:scale-95">
