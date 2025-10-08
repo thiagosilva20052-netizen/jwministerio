@@ -23,6 +23,7 @@ const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClo
   const [reminderDateTime, setReminderDateTime] = useState('');
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string>('');
 
   const getDefaultReminderTime = (dateStr: string) => {
     const d = dateStr ? new Date(dateStr + 'T00:00:00') : new Date();
@@ -60,21 +61,23 @@ const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClo
         setReminderDateTime(getDefaultReminderTime(today));
       }
       setNotificationMessage(null);
+      setValidationError('');
     }
   }, [initialData, isOpen, type]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationError(''); // Reset error on new submission attempt
 
     if (reminderEnabled) {
       if (!reminderDateTime) {
-        alert('Por favor, selecciona una fecha y hora válidas para el recordatorio.');
+        setValidationError('Por favor, selecciona una fecha y hora válidas para el recordatorio.');
         return;
       }
       const reminderDate = new Date(reminderDateTime);
       const now = new Date();
       if (reminderDate <= now) {
-        alert('La fecha del recordatorio no puede ser en el pasado. Por favor, elige una fecha futura.');
+        setValidationError('La fecha del recordatorio no puede ser en el pasado. Por favor, elige una fecha futura.');
         return;
       }
     }
@@ -188,6 +191,7 @@ const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClo
             <div className="pt-2">
               <label className="block text-textSecondary dark:text-darkTextSecondary text-sm font-medium mb-2" htmlFor="reminder-time">Fecha y hora del recordatorio</label>
               <input type="datetime-local" id="reminder-time" value={reminderDateTime} onChange={e => setReminderDateTime(e.target.value)} className="appearance-none border border-separator dark:border-darkSeparator rounded-xl w-full py-3 px-4 text-textPrimary dark:text-darkTextPrimary bg-surface dark:bg-darkSurface leading-tight focus:outline-none focus:ring-2 focus:ring-primary" />
+              {validationError && <p className="text-sm text-red-500 mt-2">{validationError}</p>}
             </div>
           )}
            <div className="flex items-center justify-between gap-3 pt-4">

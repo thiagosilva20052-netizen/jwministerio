@@ -27,6 +27,7 @@ const MinistryFormModal: React.FC<{
   const [reminderDateTime, setReminderDateTime] = useState('');
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string>('');
 
   const getDefaultReminderTime = (date: string) => {
     const d = new Date(date + 'T00:00:00');
@@ -58,21 +59,23 @@ const MinistryFormModal: React.FC<{
         setReminderDateTime(getDefaultReminderTime(selectedDate));
       }
       setNotificationMessage(null);
+      setValidationError('');
     }
   }, [initialData, isOpen, selectedDate]);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationError(''); // Reset error on new submission attempt
 
     if (reminderEnabled) {
       if (!reminderDateTime) {
-        alert('Por favor, selecciona una fecha y hora válidas para el recordatorio.');
+        setValidationError('Por favor, selecciona una fecha y hora válidas para el recordatorio.');
         return;
       }
       const reminderDate = new Date(reminderDateTime);
       const now = new Date();
       if (reminderDate <= now) {
-        alert('La fecha del recordatorio no puede ser en el pasado. Por favor, elige una fecha futura.');
+        setValidationError('La fecha del recordatorio no puede ser en el pasado. Por favor, elige una fecha futura.');
         return;
       }
     }
@@ -201,6 +204,7 @@ const MinistryFormModal: React.FC<{
                 onChange={e => setReminderDateTime(e.target.value)}
                 className="appearance-none border border-separator dark:border-darkSeparator rounded-xl w-full py-3 px-4 text-textPrimary dark:text-darkTextPrimary bg-surface dark:bg-darkSurface leading-tight focus:outline-none focus:ring-2 focus:ring-primary"
               />
+              {validationError && <p className="text-sm text-red-500 mt-2">{validationError}</p>}
             </div>
           )}
           <div className="flex items-center justify-between gap-3 pt-4">

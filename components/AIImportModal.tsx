@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { MinistryActivity, Shift } from '../types';
 import { XIcon, SparklesIcon } from './icons';
@@ -15,7 +15,8 @@ type Step = 'paste' | 'loading' | 'review' | 'error';
 
 const AIImportModal: React.FC<AIImportModalProps> = ({ isOpen, onClose, onImport }) => {
     const [step, setStep] = useState<Step>('paste');
-    const [pastedText, setPastedText] = useState('');
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [parsedActivities, setParsedActivities] = useState<ParsedActivity[]>([]);
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
     const [errorMessage, setErrorMessage] = useState('');
@@ -24,16 +25,28 @@ const AIImportModal: React.FC<AIImportModalProps> = ({ isOpen, onClose, onImport
         if (isOpen) {
             // Reset state when modal opens
             setStep('paste');
-            setPastedText('');
+            setSelectedFile(null);
             setParsedActivities([]);
             setSelectedIndices(new Set());
             setErrorMessage('');
         }
     }, [isOpen]);
 
-    const handleProcessText = async () => {
-        if (!pastedText.trim()) {
-            setErrorMessage("Por favor, pega algún texto para procesar.");
+    const fileToBase64 = (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1]);
+        };
+        reader.onerror = error => reject(error);
+      });
+    };
+
+    const handleProcessFile = async () => {
+        if (!selectedFile) {
+            setErrorMessage("Por favor, selecciona un archivo PDF para procesar.");
             setStep('error');
             return;
         }
@@ -42,6 +55,7 @@ const AIImportModal: React.FC<AIImportModalProps> = ({ isOpen, onClose, onImport
         setErrorMessage('');
         
         try {
+            const base64Pdf = await fileToBase64(selectedFile);
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
             
             const responseSchema = {
@@ -70,9 +84,17 @@ const AIImportModal: React.FC<AIImportModalProps> = ({ isOpen, onClose, onImport
                 },
             };
 
+            const prompt = `Analiza el archivo PDF adjunto, que es un horario de predicación. Extrae cada fila o entrada como un objeto JSON separado con los campos: "date", "territory", "leader" y "shift". Asegúrate de que la fecha esté en formato YYYY-MM-DD. Para el campo "shift", usa 'MORNING' para turnos de mañana y 'AFTERNOON' para turnos de tarde. Ignora cualquier texto que no sea una actividad de predicación.`;
+            const pdfPart = {
+                inlineData: {
+                    mimeType: selectedFile.type,
+                    data: base64Pdf
+                }
+            };
+
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
-                contents: `Analiza el siguiente texto, que son datos de una hoja de cálculo sobre horarios de predicación. Extrae cada fila como un objeto JSON separado con los campos: "date", "territory", "leader" y "shift". Asegúrate de que la fecha esté en formato YYYY-MM-DD. Para el campo "shift", usa 'MORNING' para turnos de mañana y 'AFTERNOON' para turnos de tarde. Si no puedes determinar un campo, omítelo. Texto a analizar:\n\n---\n${pastedText}\n---`,
+                contents: { parts: [{ text: prompt }, pdfPart] },
                 config: {
                     responseMimeType: "application/json",
                     responseSchema: responseSchema,
@@ -87,13 +109,13 @@ const AIImportModal: React.FC<AIImportModalProps> = ({ isOpen, onClose, onImport
                 setSelectedIndices(new Set(parsed.map((_, index) => index)));
                 setStep('review');
             } else {
-                 setErrorMessage("No se pudieron encontrar actividades válidas en el texto proporcionado. Asegúrate de que los datos incluyan columnas claras para fecha, territorio, dirigente y turno.");
+                 setErrorMessage("No se pudieron encontrar actividades válidas en el PDF. Asegúrate de que el archivo contenga una tabla o lista clara con fecha, territorio, dirigente y turno.");
                  setStep('error');
             }
 
         } catch (error) {
             console.error("Error al procesar con Gemini:", error);
-            setErrorMessage("Ocurrió un error al procesar tu solicitud. Por favor, revisa el formato de tu texto o inténtalo de nuevo más tarde.");
+            setErrorMessage("Ocurrió un error al procesar tu PDF. Por favor, asegúrate de que sea un archivo válido o inténtalo de nuevo más tarde.");
             setStep('error');
         }
     };
@@ -128,7 +150,7 @@ const AIImportModal: React.FC<AIImportModalProps> = ({ isOpen, onClose, onImport
                 return (
                     <div className="flex flex-col items-center justify-center h-64">
                         <SparklesIcon className="h-12 w-12 text-primary animate-pulse" />
-                        <p className="mt-4 text-textSecondary dark:text-darkTextSecondary font-medium">Procesando información...</p>
+                        <p className="mt-4 text-textSecondary dark:text-darkTextSecondary font-medium">Procesando PDF...</p>
                     </div>
                 );
 
@@ -197,17 +219,42 @@ const AIImportModal: React.FC<AIImportModalProps> = ({ isOpen, onClose, onImport
                 return (
                     <div className="p-4">
                         <h3 className="text-xl font-bold mb-2 text-textPrimary dark:text-darkTextPrimary">Importar Horario con IA</h3>
-                        <p className="text-sm text-textSecondary dark:text-darkTextSecondary mb-4">Pega aquí los datos de tu hoja de cálculo. La IA identificará la fecha, territorio, dirigente y turno de cada actividad.</p>
-                        <textarea
-                            value={pastedText}
-                            onChange={(e) => setPastedText(e.target.value)}
-                            placeholder="Ej: 15/07/2024, Territorio 23, Juan Pérez, Mañana..."
-                            className="w-full h-48 p-3 border border-separator dark:border-darkSeparator rounded-xl bg-background dark:bg-darkBackground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                            aria-label="Área de texto para pegar el horario"
-                        />
-                        <button onClick={handleProcessText} className="w-full mt-4 bg-primary text-white font-bold py-3 px-5 rounded-full flex items-center justify-center gap-2 transition-transform active:scale-95">
+                        <p className="text-sm text-textSecondary dark:text-darkTextSecondary mb-4">Adjunta el archivo PDF con el horario. La IA lo leerá e identificará la fecha, territorio, dirigente y turno de cada actividad.</p>
+                        
+                        <div 
+                          className="w-full h-40 p-3 border-2 border-dashed border-separator dark:border-darkSeparator rounded-xl bg-background dark:bg-darkBackground flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="application/pdf"
+                            onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}
+                            className="hidden"
+                            aria-label="Seleccionar archivo PDF"
+                          />
+                          {selectedFile ? (
+                            <div className="text-center">
+                              <p className="font-bold text-textPrimary dark:text-darkTextPrimary truncate max-w-xs">{selectedFile.name}</p>
+                              <p className="text-xs text-textSecondary dark:text-darkTextSecondary">{(selectedFile.size / 1024).toFixed(2)} KB</p>
+                              <span className="mt-2 text-sm text-primary hover:underline">Cambiar archivo</span>
+                            </div>
+                          ) : (
+                            <div className="text-center text-textSecondary dark:text-darkTextSecondary">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                                <p className="font-medium">Haz clic para subir un PDF</p>
+                                <p className="text-xs">o arrastra y suelta el archivo aquí</p>
+                            </div>
+                          )}
+                        </div>
+
+                        <button 
+                          onClick={handleProcessFile}
+                          disabled={!selectedFile}
+                          className="w-full mt-4 bg-primary text-white font-bold py-3 px-5 rounded-full flex items-center justify-center gap-2 transition-transform active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
                             <SparklesIcon className="h-5 w-5" />
-                            Procesar con IA
+                            Procesar PDF con IA
                         </button>
                     </div>
                 );
