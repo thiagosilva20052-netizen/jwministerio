@@ -11,17 +11,28 @@ export const useReminders = (
 ) => {
   const [firedReminders, setFiredReminders] = useLocalStorage<string[]>('firedReminders', []);
 
-  // Effect for cleaning up fired reminders for deleted items
+  // Effect for cleaning up fired reminders for deleted items.
+  // This runs whenever the main data lists change.
   useEffect(() => {
     const allIds = new Set([
         ...ministryActivities.map(i => i.id),
         ...schoolAssignments.map(i => i.id),
         ...meetingDuties.map(i => i.id)
     ]);
-    if (firedReminders.some(id => !allIds.has(id))) {
-      setFiredReminders(prev => prev.filter(id => allIds.has(id)));
-    }
-  }, [ministryActivities, schoolAssignments, meetingDuties, firedReminders, setFiredReminders]);
+
+    setFiredReminders(currentFiredReminders => {
+      // Create a new array containing only the reminder IDs that still exist.
+      const validReminders = currentFiredReminders.filter(id => allIds.has(id));
+
+      // If the length is the same, no reminders were cleaned up.
+      // We return the original array reference to prevent unnecessary state updates.
+      if (validReminders.length === currentFiredReminders.length) {
+        return currentFiredReminders;
+      }
+      
+      return validReminders;
+    });
+  }, [ministryActivities, schoolAssignments, meetingDuties, setFiredReminders]);
 
   // Effect for checking and firing reminders
   useEffect(() => {

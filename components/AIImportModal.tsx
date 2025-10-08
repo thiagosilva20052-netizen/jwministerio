@@ -51,6 +51,14 @@ const AIImportModal: React.FC<AIImportModalProps> = ({ isOpen, onClose, onImport
             return;
         }
 
+        if (selectedFile.type !== 'application/pdf') {
+            setErrorMessage(`El archivo que seleccionaste no parece ser un PDF. Por favor, asegúrate de que sea un archivo PDF válido.`);
+            setStep('error');
+            setSelectedFile(null);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            return;
+        }
+
         setStep('loading');
         setErrorMessage('');
         
@@ -87,14 +95,14 @@ const AIImportModal: React.FC<AIImportModalProps> = ({ isOpen, onClose, onImport
             const prompt = `Analiza el archivo PDF adjunto, que es un horario de predicación. Extrae cada fila o entrada como un objeto JSON separado con los campos: "date", "territory", "leader" y "shift". Asegúrate de que la fecha esté en formato YYYY-MM-DD. Para el campo "shift", usa 'MORNING' para turnos de mañana y 'AFTERNOON' para turnos de tarde. Ignora cualquier texto que no sea una actividad de predicación.`;
             const pdfPart = {
                 inlineData: {
-                    mimeType: selectedFile.type,
+                    mimeType: 'application/pdf',
                     data: base64Pdf
                 }
             };
 
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
-                contents: { parts: [{ text: prompt }, pdfPart] },
+                contents: [ { text: prompt }, pdfPart ],
                 config: {
                     responseMimeType: "application/json",
                     responseSchema: responseSchema,
@@ -115,7 +123,7 @@ const AIImportModal: React.FC<AIImportModalProps> = ({ isOpen, onClose, onImport
 
         } catch (error) {
             console.error("Error al procesar con Gemini:", error);
-            setErrorMessage("Ocurrió un error al procesar tu PDF. Por favor, asegúrate de que sea un archivo válido o inténtalo de nuevo más tarde.");
+            setErrorMessage("Ocurrió un error al procesar tu PDF. Por favor, asegúrate de que el formato del contenido sea correcto o inténtalo de nuevo más tarde.");
             setStep('error');
         }
     };
