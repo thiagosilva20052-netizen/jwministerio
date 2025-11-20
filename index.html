@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="/manifest.json">
@@ -22,21 +22,22 @@
           extend: {
             colors: {
               primary: {
-                DEFAULT: '#007AFF', // Un azul vibrante similar al de iOS
-                light: '#3395FF',
-                dark: '#005ECC',
+                DEFAULT: '#007AFF',
+                light: '#479BFF',
+                dark: '#0056B3',
               },
-              // Light mode
-              background: '#F2F2F7',
+              background: '#F2F2F7', // iOS Light Gray
               surface: '#FFFFFF',
-              textPrimary: '#1C1C1E',
-              textSecondary: '#8A8A8E',
-              // Dark mode
+              textPrimary: '#000000',
+              textSecondary: '#6C6C70', // iOS Gray
+              
+              // Dark mode refined
               darkBackground: '#000000',
-              darkSurface: '#1C1C1E',
+              darkSurface: '#1C1C1E', 
               darkTextPrimary: '#FFFFFF',
-              darkTextSecondary: '#8D8D92',
-              separator: '#E5E5EA',
+              darkTextSecondary: '#98989D', // iOS Dark Gray
+              
+              separator: '#C6C6C8',
               darkSeparator: '#38383A',
             },
             fontFamily: {
@@ -45,8 +46,34 @@
             borderRadius: {
               'xl': '1rem',
               '2xl': '1.25rem',
-              '3xl': '1.875rem',
+              '3xl': '1.75rem',
               '4xl': '2.5rem',
+            },
+            boxShadow: {
+              'soft': '0 8px 30px rgba(0,0,0,0.06)',
+              'glow': '0 0 20px rgba(0, 122, 255, 0.3)',
+              'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+            },
+            animation: {
+              'blob': 'blob 7s infinite',
+              'fade-in': 'fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+              'slide-up': 'slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+            },
+            keyframes: {
+              blob: {
+                '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                '100%': { transform: 'translate(0px, 0px) scale(1)' },
+              },
+              'fade-in': {
+                '0%': { opacity: '0', transform: 'scale(0.98)' },
+                '100%': { opacity: '1', transform: 'scale(1)' },
+              },
+              'slide-up': {
+                '0%': { transform: 'translateY(20px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              }
             }
           },
         },
@@ -71,7 +98,7 @@
 }
 </script>
 </head>
-  <body class="bg-background dark:bg-darkBackground">
+  <body class="bg-background dark:bg-darkBackground antialiased overflow-hidden selection:bg-primary/30">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
     <script>

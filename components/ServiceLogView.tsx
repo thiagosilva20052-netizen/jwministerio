@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ServiceEntry } from '../types';
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon } from './icons';
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon, PlayIcon, PauseIcon, StopIcon } from './icons';
 
 interface ServiceFormModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ const ServiceFormModal: React.FC<ServiceFormModalProps> = ({ isOpen, onClose, on
   const [videos, setVideos] = useState<number | ''>('');
   const [returnVisits, setReturnVisits] = useState<number | ''>('');
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [validationError, setValidationError] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -31,22 +33,33 @@ const ServiceFormModal: React.FC<ServiceFormModalProps> = ({ isOpen, onClose, on
         setVideos('');
         setReturnVisits('');
       }
+      setValidationError('');
     }
   }, [initialData, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (hours !== '' && hours >= 0) {
-      onSubmit({
+    setValidationError('');
+
+    if (hours === '') {
+        setValidationError('El campo de horas es obligatorio.');
+        return;
+    }
+
+    if (hours < 0) {
+        setValidationError('Las horas no pueden ser un número negativo.');
+        return;
+    }
+
+    onSubmit({
         id: selectedDate,
         date: selectedDate,
         hours: Number(hours),
         placements: placements !== '' ? Number(placements) : undefined,
         videos: videos !== '' ? Number(videos) : undefined,
         returnVisits: returnVisits !== '' ? Number(returnVisits) : undefined,
-      });
-      onClose();
-    }
+    });
+    onClose();
   };
 
   const handleDelete = () => {
@@ -61,59 +74,79 @@ const ServiceFormModal: React.FC<ServiceFormModalProps> = ({ isOpen, onClose, on
   };
 
   return (
-    <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-end z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={!isConfirmOpen ? onClose : undefined}>
-      <div className={`bg-surface dark:bg-darkSurface p-5 pb-8 rounded-t-3xl shadow-xl w-full max-w-md transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
-        <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-5"></div>
-        <h2 className="text-2xl font-bold mb-5 text-textPrimary dark:text-darkTextPrimary">{initialData ? 'Editar Registro' : 'Añadir Registro'}</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className={`fixed inset-0 bg-black/40 backdrop-blur-md flex justify-center items-end z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={!isConfirmOpen ? onClose : undefined}>
+      <div className={`bg-surface dark:bg-[#1C1C1E] p-6 pb-10 rounded-t-[2.5rem] shadow-2xl w-full max-w-[480px] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'} border-t border-white/20 dark:border-white/5`} onClick={e => e.stopPropagation()}>
+        <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-8"></div>
+        <h2 className="text-2xl font-bold mb-6 text-textPrimary dark:text-darkTextPrimary px-1 tracking-tight">{initialData ? 'Editar Registro' : 'Añadir Registro'}</h2>
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-textSecondary dark:text-darkTextSecondary text-sm font-medium mb-2" htmlFor="date">Fecha</label>
-            <input type="date" id="date" value={selectedDate} readOnly className="appearance-none border border-separator dark:border-darkSeparator rounded-xl w-full py-3 px-4 text-textPrimary dark:text-darkTextPrimary bg-background dark:bg-darkSurface leading-tight focus:outline-none focus:ring-2 focus:ring-primary" />
+            <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="date">Fecha</label>
+            <input type="date" id="date" value={selectedDate} readOnly className="appearance-none border-none bg-gray-100 dark:bg-white/10 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary leading-tight focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-textSecondary dark:text-darkTextSecondary text-sm font-medium mb-2" htmlFor="hours">Horas</label>
-              <input id="hours" type="number" step="0.1" min="0" value={hours} onChange={e => setHours(e.target.value === '' ? '' : parseFloat(e.target.value))} required className="appearance-none border border-separator dark:border-darkSeparator rounded-xl w-full py-3 px-4 text-textPrimary dark:text-darkTextPrimary bg-surface dark:bg-darkSurface leading-tight focus:outline-none focus:ring-2 focus:ring-primary" />
+              <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="hours">Horas</label>
+              <input 
+                id="hours" 
+                type="number" 
+                step="0.1" 
+                min="0" 
+                value={hours} 
+                onChange={e => setHours(e.target.value === '' ? '' : parseFloat(e.target.value))} 
+                className={`appearance-none border-none rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary bg-gray-50 dark:bg-white/5 leading-tight focus:outline-none focus:ring-2 transition-all shadow-sm text-lg font-bold ${validationError ? 'ring-2 ring-red-500 bg-red-50 dark:bg-red-900/20' : 'focus:ring-primary'}`}
+              />
             </div>
             <div>
-              <label className="block text-textSecondary dark:text-darkTextSecondary text-sm font-medium mb-2" htmlFor="placements">Colocaciones</label>
-              <input id="placements" type="number" min="0" value={placements} onChange={e => setPlacements(e.target.value === '' ? '' : parseInt(e.target.value))} className="appearance-none border border-separator dark:border-darkSeparator rounded-xl w-full py-3 px-4 text-textPrimary dark:text-darkTextPrimary bg-surface dark:bg-darkSurface leading-tight focus:outline-none focus:ring-2 focus:ring-primary" />
+              <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="placements">Colocaciones</label>
+              <input id="placements" type="number" min="0" value={placements} onChange={e => setPlacements(e.target.value === '' ? '' : parseInt(e.target.value))} className="appearance-none border-none bg-gray-50 dark:bg-white/5 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm text-lg" />
             </div>
             <div>
-              <label className="block text-textSecondary dark:text-darkTextSecondary text-sm font-medium mb-2" htmlFor="videos">Videos</label>
-              <input id="videos" type="number" min="0" value={videos} onChange={e => setVideos(e.target.value === '' ? '' : parseInt(e.target.value))} className="appearance-none border border-separator dark:border-darkSeparator rounded-xl w-full py-3 px-4 text-textPrimary dark:text-darkTextPrimary bg-surface dark:bg-darkSurface leading-tight focus:outline-none focus:ring-2 focus:ring-primary" />
+              <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="videos">Videos</label>
+              <input id="videos" type="number" min="0" value={videos} onChange={e => setVideos(e.target.value === '' ? '' : parseInt(e.target.value))} className="appearance-none border-none bg-gray-50 dark:bg-white/5 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm text-lg" />
             </div>
             <div>
-              <label className="block text-textSecondary dark:text-darkTextSecondary text-sm font-medium mb-2" htmlFor="returnVisits">Revisitas</label>
-              <input id="returnVisits" type="number" min="0" value={returnVisits} onChange={e => setReturnVisits(e.target.value === '' ? '' : parseInt(e.target.value))} className="appearance-none border border-separator dark:border-darkSeparator rounded-xl w-full py-3 px-4 text-textPrimary dark:text-darkTextPrimary bg-surface dark:bg-darkSurface leading-tight focus:outline-none focus:ring-2 focus:ring-primary" />
+              <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="returnVisits">Revisitas</label>
+              <input id="returnVisits" type="number" min="0" value={returnVisits} onChange={e => setReturnVisits(e.target.value === '' ? '' : parseInt(e.target.value))} className="appearance-none border-none bg-gray-50 dark:bg-white/5 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm text-lg" />
             </div>
           </div>
-          <div className="flex items-center justify-between gap-3 pt-4">
+          
+          {validationError && (
+             <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4">
+                <p className="text-sm text-red-600 dark:text-red-400 font-medium text-center">{validationError}</p>
+             </div>
+          )}
+
+          <div className="flex items-center gap-3 pt-6">
              {initialData && (
-                <button type="button" onClick={handleDelete} className="bg-red-500/15 text-red-500 font-bold py-3 px-5 rounded-full hover:bg-red-500/25 transition-colors flex items-center gap-2"><TrashIcon className="h-5 w-5" /> Eliminar</button>
+                <button type="button" onClick={handleDelete} className="bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 font-bold p-4 rounded-2xl transition-all active:scale-95 flex-shrink-0" aria-label="Eliminar">
+                   <TrashIcon className="h-6 w-6" />
+                </button>
              )}
             <div className="flex-grow"></div>
-            <button type="button" onClick={onClose} className="bg-gray-500/15 text-textSecondary dark:text-darkTextSecondary font-bold py-3 px-5 rounded-full hover:bg-gray-500/25 transition-colors">Cancelar</button>
-            <button type="submit" className="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-5 rounded-full focus:outline-none focus:shadow-outline transition-transform active:scale-95">Guardar</button>
+            <button type="button" onClick={onClose} className="bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-textPrimary dark:text-darkTextPrimary font-bold py-4 px-6 rounded-2xl transition-all active:scale-95">Cancelar</button>
+            <button type="submit" className="bg-primary hover:bg-primary-dark text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-primary/30 hover:shadow-primary/50 transform transition-all active:scale-95">Guardar</button>
           </div>
         </form>
       </div>
       
       {isConfirmOpen && (
-        <div className="absolute inset-0 bg-black/60 flex justify-center items-center z-40" onClick={() => setIsConfirmOpen(false)}>
-            <div className="bg-surface dark:bg-darkSurface p-6 rounded-3xl shadow-xl w-full max-w-sm m-4 animate-[fade-in_0.2s_ease-out]" onClick={e => e.stopPropagation()}>
-                <h2 className="text-xl font-bold text-center mb-2 text-textPrimary dark:text-darkTextPrimary">Confirmar Eliminación</h2>
-                <p className="text-center text-textSecondary dark:text-darkTextSecondary mb-6">¿Estás seguro de que quieres eliminar este registro? Esta acción no se puede deshacer.</p>
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-40" onClick={() => setIsConfirmOpen(false)}>
+            <div className="bg-surface dark:bg-[#1C1C1E] p-8 rounded-3xl shadow-2xl w-full max-w-xs m-4 animate-[scale-up_0.2s_ease-out] border border-white/20 dark:border-white/5" onClick={e => e.stopPropagation()}>
+                <div className="w-16 h-16 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
+                   <TrashIcon className="h-8 w-8" />
+                </div>
+                <h2 className="text-xl font-bold text-center mb-2 text-textPrimary dark:text-darkTextPrimary">¿Eliminar registro?</h2>
+                <p className="text-center text-textSecondary dark:text-darkTextSecondary mb-8 leading-relaxed text-sm">Esta acción no se puede deshacer y afectará a tus totales mensuales.</p>
                 <div className="flex flex-col gap-3">
                     <button
                         onClick={handleConfirmDelete}
-                        className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-5 rounded-full transition-colors active:scale-95"
+                        className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-5 rounded-2xl shadow-lg shadow-red-500/30 transition-all active:scale-95"
                     >
-                        Eliminar
+                        Sí, eliminar
                     </button>
                     <button
                         onClick={() => setIsConfirmOpen(false)}
-                        className="w-full bg-gray-500/15 text-textPrimary dark:text-darkTextPrimary font-bold py-3 px-5 rounded-full hover:bg-gray-500/25 transition-colors"
+                        className="w-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-textPrimary dark:text-darkTextPrimary font-bold py-4 px-5 rounded-2xl transition-all active:scale-95"
                     >
                         Cancelar
                     </button>
@@ -125,20 +158,129 @@ const ServiceFormModal: React.FC<ServiceFormModalProps> = ({ isOpen, onClose, on
   );
 };
 
+const Stopwatch: React.FC<{ onSave: (hours: number) => void }> = ({ onSave }) => {
+  const [state, setState] = useState<'IDLE' | 'RUNNING' | 'PAUSED'>('IDLE');
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [accumulatedTime, setAccumulatedTime] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+  const intervalRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const savedState = localStorage.getItem('stopwatchState');
+    const savedStartTime = localStorage.getItem('stopwatchStartTime');
+    const savedAccumulated = localStorage.getItem('stopwatchAccumulated');
+
+    if (savedState) {
+      setState(savedState as any);
+      setAccumulatedTime(savedAccumulated ? parseInt(savedAccumulated) : 0);
+      
+      if (savedState === 'RUNNING' && savedStartTime) {
+        setStartTime(parseInt(savedStartTime));
+      } else if (savedState === 'PAUSED') {
+        setElapsed(savedAccumulated ? parseInt(savedAccumulated) : 0);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('stopwatchState', state);
+    if (startTime) localStorage.setItem('stopwatchStartTime', startTime.toString());
+    localStorage.setItem('stopwatchAccumulated', accumulatedTime.toString());
+  }, [state, startTime, accumulatedTime]);
+
+  useEffect(() => {
+    if (state === 'RUNNING') {
+      intervalRef.current = window.setInterval(() => {
+        const now = Date.now();
+        const start = startTime || now;
+        setElapsed(now - start + accumulatedTime);
+      }, 1000);
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [state, startTime, accumulatedTime]);
+
+  const toggleTimer = () => {
+    if (state === 'IDLE' || state === 'PAUSED') {
+      setStartTime(Date.now());
+      setState('RUNNING');
+    } else {
+      setAccumulatedTime(elapsed);
+      setStartTime(null);
+      setState('PAUSED');
+    }
+  };
+
+  const stopTimer = () => {
+    if (state !== 'IDLE') {
+      const hours = elapsed / (1000 * 60 * 60);
+      onSave(hours);
+      setState('IDLE');
+      setStartTime(null);
+      setAccumulatedTime(0);
+      setElapsed(0);
+      localStorage.removeItem('stopwatchState');
+      localStorage.removeItem('stopwatchStartTime');
+      localStorage.removeItem('stopwatchAccumulated');
+    }
+  };
+
+  const formatTime = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="bg-white dark:bg-[#1C1C1E] shadow-soft dark:shadow-none border border-gray-100 dark:border-white/5 rounded-[2rem] p-6 mb-6 flex items-center justify-between relative overflow-hidden">
+        {state === 'RUNNING' && (
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-blue-400/5 animate-pulse pointer-events-none"></div>
+        )}
+        <div className="flex flex-col relative z-10 pl-2">
+            <span className="text-xs font-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-widest mb-1.5">Cronómetro</span>
+            <span className={`text-5xl font-mono font-bold tabular-nums tracking-tighter ${state === 'RUNNING' ? 'text-transparent bg-clip-text bg-gradient-to-br from-primary to-blue-400' : 'text-textPrimary dark:text-darkTextPrimary'}`}>
+                {formatTime(elapsed)}
+            </span>
+        </div>
+        <div className="flex items-center gap-3 relative z-10">
+            {state !== 'IDLE' && (
+                <button onClick={stopTimer} className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-500/20 transition-all active:scale-95">
+                    <StopIcon className="h-5 w-5" />
+                </button>
+            )}
+            <button 
+                onClick={toggleTimer} 
+                className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all active:scale-90 shadow-lg transform ${
+                    state === 'RUNNING' 
+                    ? 'bg-amber-400 text-white shadow-amber-400/40' 
+                    : 'bg-primary text-white shadow-primary/40'
+                }`}
+            >
+                {state === 'RUNNING' ? <PauseIcon className="h-8 w-8" /> : <PlayIcon className="h-8 w-8 ml-1" />}
+            </button>
+        </div>
+    </div>
+  );
+};
+
 
 interface ServiceLogViewProps {
   entries: ServiceEntry[];
   onAddOrUpdateEntry: (entry: ServiceEntry) => void;
   onDeleteEntry: (id: string) => void;
+  monthlyGoal: number;
 }
 
-const ServiceLogView: React.FC<ServiceLogViewProps> = ({ entries, onAddOrUpdateEntry, onDeleteEntry }) => {
+const ServiceLogView: React.FC<ServiceLogViewProps> = ({ entries, onAddOrUpdateEntry, onDeleteEntry, monthlyGoal }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [editingEntry, setEditingEntry] = useState<ServiceEntry | null>(null);
-
-  const MONTHLY_GOAL = 50;
 
   const { totalHoursThisMonth, progressPercentage, remainingHours } = useMemo(() => {
     const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -150,11 +292,11 @@ const ServiceLogView: React.FC<ServiceLogViewProps> = ({ entries, onAddOrUpdateE
     });
 
     const totalHours = entriesThisMonth.reduce((sum, entry) => sum + entry.hours, 0);
-    const progress = Math.min((totalHours / MONTHLY_GOAL) * 100, 100);
-    const remaining = Math.max(MONTHLY_GOAL - totalHours, 0);
+    const progress = Math.min((totalHours / monthlyGoal) * 100, 100);
+    const remaining = Math.max(monthlyGoal - totalHours, 0);
 
     return { totalHoursThisMonth: totalHours, progressPercentage: progress, remainingHours: remaining };
-  }, [entries, currentDate]);
+  }, [entries, currentDate, monthlyGoal]);
 
   const { chartData, maxHours } = useMemo(() => {
     const year = currentDate.getFullYear();
@@ -183,7 +325,7 @@ const ServiceLogView: React.FC<ServiceLogViewProps> = ({ entries, onAddOrUpdateE
     
     const referenceDate = isCurrentMonthView ? today : new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
 
-    const dayOfWeek = (referenceDate.getDay() + 6) % 7; // Monday = 0, Sunday = 6
+    const dayOfWeek = (referenceDate.getDay() + 6) % 7; 
     
     const startOfWeek = new Date(referenceDate);
     startOfWeek.setDate(referenceDate.getDate() - dayOfWeek);
@@ -211,7 +353,7 @@ const ServiceLogView: React.FC<ServiceLogViewProps> = ({ entries, onAddOrUpdateE
   const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
   const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
   const daysInMonth = endOfMonth.getDate();
-  const startDayOfWeek = (startOfMonth.getDay() + 6) % 7; // Lunes = 0
+  const startDayOfWeek = (startOfMonth.getDay() + 6) % 7;
 
   const days = Array.from({ length: startDayOfWeek }, (_, i) => <div key={`empty-${i}`} className=""></div>);
 
@@ -225,19 +367,18 @@ const ServiceLogView: React.FC<ServiceLogViewProps> = ({ entries, onAddOrUpdateE
     days.push(
       <div 
         key={i} 
-        className={`py-2 flex flex-col items-center justify-start min-h-[70px] cursor-pointer rounded-2xl transition-colors duration-200 ${hasEntry ? 'bg-primary/10 dark:bg-primary/20' : 'hover:bg-black/5 dark:hover:bg-white/5'}`} 
+        className={`py-2 flex flex-col items-center justify-start min-h-[60px] cursor-pointer rounded-2xl transition-all duration-300 ${hasEntry ? 'bg-primary/5 dark:bg-white/10 scale-105 shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`} 
         onClick={() => handleDateClick(dateString)}
       >
         <time 
           dateTime={dateString} 
-          className={`text-base w-8 h-8 flex items-center justify-center rounded-full relative ${isToday ? 'text-primary font-bold' : 'text-textPrimary dark:text-darkTextPrimary'} ${hasEntry ? 'font-bold' : 'font-medium'}`}
+          className={`text-sm w-8 h-8 flex items-center justify-center rounded-full ${isToday ? 'bg-primary text-white font-bold shadow-lg shadow-primary/40' : 'text-textPrimary dark:text-darkTextPrimary'} ${hasEntry && !isToday ? 'font-bold' : ''}`}
         >
-          {isToday && <span className="absolute inset-0 rounded-full ring-2 ring-primary/70"></span>}
           {i}
         </time>
         {hasEntry && (
-            <div className="mt-1.5 text-xs font-bold text-primary-dark dark:text-primary-light bg-primary/20 dark:bg-primary/30 px-2 py-0.5 rounded-full">
-                {entryForDay.hours % 1 === 0 ? `${entryForDay.hours}h` : `${entryForDay.hours.toFixed(1)}h`}
+            <div className="mt-1 text-[10px] font-extrabold text-primary dark:text-primary-light bg-white dark:bg-black/40 px-2 py-0.5 rounded-full shadow-sm">
+                {entryForDay.hours % 1 === 0 ? `${entryForDay.hours}` : `${entryForDay.hours.toFixed(1)}`}
             </div>
         )}
       </div>
@@ -268,94 +409,102 @@ const ServiceLogView: React.FC<ServiceLogViewProps> = ({ entries, onAddOrUpdateE
         onAddOrUpdateEntry(entryData);
     }
   };
+  
+  const handleStopwatchSave = (recordedHours: number) => {
+      const today = new Date().toISOString().split('T')[0];
+      const existingEntry = entries.find(e => e.date === today);
+      
+      const roundedHours = Math.round(recordedHours * 100) / 100;
 
-  const weekdays = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'];
+      if(existingEntry) {
+          onAddOrUpdateEntry({
+              ...existingEntry,
+              hours: (existingEntry.hours || 0) + roundedHours
+          });
+      } else {
+          onAddOrUpdateEntry({
+              id: today,
+              date: today,
+              hours: roundedHours
+          });
+      }
+  };
+
+  const weekdays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
   return (
-    <div className="p-4 animate-[fade-in_0.5s_ease-in-out]">
-      <div className="flex justify-between items-center mb-4 px-2">
-        <h2 className="text-2xl font-bold text-textPrimary dark:text-darkTextPrimary">
-          {currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase())}
+    <div className="px-4 py-2 animate-fade-in">
+      <div className="flex justify-between items-center mb-8 px-2">
+        <h2 className="text-3xl font-bold text-textPrimary dark:text-darkTextPrimary tracking-tight">
+          {currentDate.toLocaleString('es-ES', { month: 'long' }).replace(/^\w/, c => c.toUpperCase())} <span className="text-textSecondary dark:text-darkTextSecondary font-medium">{currentDate.getFullYear()}</span>
         </h2>
-        <div className="flex items-center space-x-1">
-          <button onClick={() => changeMonth(-1)} className="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary transition-colors"><ChevronLeftIcon className="h-6 w-6" /></button>
-          <button onClick={() => changeMonth(1)} className="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary transition-colors"><ChevronRightIcon className="h-6 w-6" /></button>
+        <div className="flex bg-white dark:bg-white/5 rounded-full p-1 shadow-soft border border-gray-100 dark:border-white/5">
+            <button onClick={() => changeMonth(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary transition-colors"><ChevronLeftIcon className="h-5 w-5" /></button>
+            <button onClick={() => changeMonth(1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary transition-colors"><ChevronRightIcon className="h-5 w-5" /></button>
         </div>
       </div>
       
-      <div className="bg-surface dark:bg-darkSurface shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-2xl p-5 mb-6">
-        <h3 className="font-bold text-lg text-textPrimary dark:text-darkTextPrimary mb-4 text-center">Progreso Mensual</h3>
-        <div className="text-center mb-4">
-          <span className="text-6xl font-extrabold text-primary dark:text-primary-light tracking-tight">{totalHoursThisMonth.toFixed(1)}</span>
-          <span className="text-xl font-semibold text-textSecondary dark:text-darkTextSecondary ml-1.5">horas</span>
+      <Stopwatch onSave={handleStopwatchSave} />
+      
+      <div className="bg-white dark:bg-[#1C1C1E] shadow-soft dark:shadow-none border border-gray-100 dark:border-white/5 rounded-[2rem] p-6 mb-6 overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+        <h3 className="font-bold text-lg text-textPrimary dark:text-darkTextPrimary mb-2 text-center relative z-10">Progreso Mensual</h3>
+        <div className="text-center mb-5 relative z-10">
+          <span className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-primary to-blue-600 dark:to-blue-400 tracking-tighter">{totalHoursThisMonth.toFixed(1)}</span>
+          <span className="text-xl font-semibold text-textSecondary dark:text-darkTextSecondary ml-2">hrs</span>
         </div>
-        <div className="w-full bg-background dark:bg-darkBackground rounded-full h-2.5 mb-2">
-            <div className="bg-primary h-2.5 rounded-full" style={{ width: `${progressPercentage}%` }}></div>
+        <div className="w-full bg-gray-100 dark:bg-black/20 rounded-full h-4 mb-3 overflow-hidden shadow-inner">
+            <div className="bg-gradient-to-r from-primary to-blue-400 h-4 rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(0,122,255,0.4)]" style={{ width: `${progressPercentage}%` }}></div>
         </div>
-        <div className="flex justify-between text-sm font-medium text-textSecondary dark:text-darkTextSecondary">
-            <span>Meta: {MONTHLY_GOAL}h</span>
+        <div className="flex justify-between text-sm font-semibold text-textSecondary dark:text-darkTextSecondary px-1">
+            <span>Meta: {monthlyGoal}h</span>
             <span>Faltan {remainingHours.toFixed(1)}h</span>
         </div>
       </div>
       
-      <div className="bg-surface dark:bg-darkSurface shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-2xl p-5 mb-6">
-        <h3 className="font-bold text-lg text-textPrimary dark:text-darkTextPrimary mb-4">Actividad del Mes</h3>
-        <div className="h-40 flex items-end justify-between gap-px border-b border-separator dark:border-darkSeparator pb-2" role="figure" aria-label="Gráfico de horas de servicio diarias">
-          {chartData.map(item => (
-            <div key={item.day} className="flex-1 h-full flex flex-col items-center justify-end group relative pt-8">
-              <div 
-                className="w-[60%] max-w-[15px] bg-primary/70 rounded-t transition-all duration-300 ease-out group-hover:bg-primary"
-                style={{ height: `${item.hours > 0 ? Math.max((item.hours / maxHours) * 100, 4) : 0}%` }}
-                title={`Día ${item.day}: ${item.hours.toFixed(1)}h`}
-              >
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max px-2 py-1 bg-darkBackground dark:bg-darkSurface text-white dark:text-darkTextPrimary text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
-                  {item.hours.toFixed(1)}h
+      <div className="grid grid-cols-1 gap-6 mb-6">
+        <div className="bg-white dark:bg-[#1C1C1E] shadow-soft dark:shadow-none border border-gray-100 dark:border-white/5 rounded-[2rem] p-6">
+            <h3 className="font-bold text-lg text-textPrimary dark:text-darkTextPrimary mb-6">Actividad Diaria</h3>
+            <div className="h-40 flex items-end justify-between gap-1 pb-2" role="figure" aria-label="Gráfico de horas de servicio diarias">
+            {chartData.map(item => (
+                <div key={item.day} className="flex-1 h-full flex flex-col items-center justify-end group relative">
+                <div 
+                    className="w-full max-w-[8px] bg-gray-200 dark:bg-white/10 rounded-full transition-all duration-500 ease-out group-hover:bg-primary overflow-hidden relative"
+                    style={{ height: `${item.hours > 0 ? Math.max((item.hours / maxHours) * 100, 10) : 5}%` }}
+                >
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-blue-400 h-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    {item.hours > 0 && <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-blue-400 h-full"></div>}
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="w-full flex items-start justify-between gap-px mt-1">
-          {chartData.map(item => (
-            <div key={item.day} className="flex-1 text-center">
-              <span className="text-[10px] text-textSecondary dark:text-darkTextSecondary font-medium">
-                {(item.day === 1 || item.day % 5 === 0) ? item.day : ''}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-surface dark:bg-darkSurface shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-2xl p-4 mb-6">
-        <h3 className="font-bold text-lg text-textPrimary dark:text-darkTextPrimary mb-3">Resumen Semanal</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-            <div>
-                <p className="text-2xl font-bold text-primary dark:text-primary-light">{weeklyTotals.hours.toFixed(1)}</p>
-                <p className="text-xs font-medium text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider">Horas</p>
-            </div>
-            <div>
-                <p className="text-2xl font-bold text-primary dark:text-primary-light">{weeklyTotals.placements}</p>
-                <p className="text-xs font-medium text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider">Colocaciones</p>
-            </div>
-            <div>
-                <p className="text-2xl font-bold text-primary dark:text-primary-light">{weeklyTotals.videos}</p>
-                <p className="text-xs font-medium text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider">Videos</p>
-            </div>
-            <div>
-                <p className="text-2xl font-bold text-primary dark:text-primary-light">{weeklyTotals.returnVisits}</p>
-                <p className="text-xs font-medium text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider">Revisitas</p>
-            </div>
-        </div>
-      </div>
-
-      <div className="bg-surface dark:bg-darkSurface shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-2xl p-4">
-        <div className="grid grid-cols-7">
-            {weekdays.map(day => (
-              <div key={day} className="text-center font-semibold text-sm py-2 text-textSecondary dark:text-darkTextSecondary">{day}</div>
+                {item.hours > 0 && (
+                    <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max px-2 py-1 bg-black/80 text-white text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-10 shadow-xl -translate-y-1 group-hover:translate-y-0">
+                     {item.hours.toFixed(1)}h
+                    </div>
+                )}
+                </div>
             ))}
+            </div>
         </div>
-        <div className="grid grid-cols-7 gap-1">
-            {days}
+
+        <div className="bg-white dark:bg-[#1C1C1E] shadow-soft dark:shadow-none border border-gray-100 dark:border-white/5 rounded-[2rem] p-6">
+            <h3 className="font-bold text-lg text-textPrimary dark:text-darkTextPrimary mb-4">Esta Semana</h3>
+            <div className="grid grid-cols-4 gap-3 text-center">
+                <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-3 flex flex-col justify-center">
+                    <p className="text-2xl font-black text-textPrimary dark:text-darkTextPrimary">{weeklyTotals.hours.toFixed(1)}</p>
+                    <p className="text-[9px] font-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider mt-1">Horas</p>
+                </div>
+                <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-3 flex flex-col justify-center">
+                    <p className="text-2xl font-black text-textPrimary dark:text-darkTextPrimary">{weeklyTotals.placements}</p>
+                    <p className="text-[9px] font-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider mt-1">Pubs</p>
+                </div>
+                <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-3 flex flex-col justify-center">
+                    <p className="text-2xl font-black text-textPrimary dark:text-darkTextPrimary">{weeklyTotals.videos}</p>
+                    <p className="text-[9px] font-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider mt-1">Videos</p>
+                </div>
+                <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-3 flex flex-col justify-center">
+                    <p className="text-2xl font-black text-textPrimary dark:text-darkTextPrimary">{weeklyTotals.returnVisits}</p>
+                    <p className="text-[9px] font-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider mt-1">Revis.</p>
+                </div>
+            </div>
         </div>
       </div>
       
@@ -368,7 +517,11 @@ const ServiceLogView: React.FC<ServiceLogViewProps> = ({ entries, onAddOrUpdateE
         selectedDate={selectedDate}
       />
       
-      <button onClick={handleAddClick} className="fixed bottom-28 right-5 bg-primary hover:bg-primary-dark text-white rounded-2xl p-4 shadow-lg shadow-primary/40 z-20 transform transition-transform hover:scale-105 active:scale-95">
+      <button 
+        onClick={handleAddClick} 
+        className="fixed bottom-28 right-6 bg-primary text-white rounded-[1.2rem] p-4 shadow-lg shadow-primary/40 z-20 transform transition-all duration-300 hover:scale-110 hover:shadow-primary/60 hover:-translate-y-1 active:scale-90 active:translate-y-0"
+        aria-label="Añadir entrada"
+      >
         <PlusIcon className="h-7 w-7" />
       </button>
     </div>

@@ -1,8 +1,10 @@
+
 export enum View {
   CALENDAR = 'CALENDAR',
   SCHOOL = 'SCHOOL',
   DUTIES = 'DUTIES',
   SERVICE_LOG = 'SERVICE_LOG',
+  SETTINGS = 'SETTINGS',
 }
 
 export enum Shift {

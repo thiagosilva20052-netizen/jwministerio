@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { MinistryActivity, Shift } from '../types';
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon, PencilIcon, BellIcon, SparklesIcon } from './icons';
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon, PencilIcon, BellIcon, SparklesIcon, UsersIcon } from './icons';
 import AIImportModal from './AIImportModal';
 
 
@@ -65,7 +66,7 @@ const MinistryFormModal: React.FC<{
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setValidationError(''); // Reset error on new submission attempt
+    setValidationError(''); 
 
     if (reminderEnabled) {
       if (!reminderDateTime) {
@@ -143,96 +144,113 @@ const MinistryFormModal: React.FC<{
   };
 
   return (
-    <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-end z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={!isConfirmOpen ? onClose : undefined}>
-      <div className={`bg-surface dark:bg-darkSurface p-5 pb-8 rounded-t-3xl shadow-xl w-full max-w-md transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
-        <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-5"></div>
-        <h2 className="text-2xl font-bold mb-5 text-textPrimary dark:text-darkTextPrimary">{initialData ? 'Editar Actividad' : 'Añadir Actividad'}</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className={`fixed inset-0 bg-black/40 backdrop-blur-md flex justify-center items-end z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={!isConfirmOpen ? onClose : undefined}>
+      <div className={`bg-surface dark:bg-[#1C1C1E] p-6 pb-10 rounded-t-[2.5rem] shadow-2xl w-full max-w-[480px] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'} border-t border-white/20 dark:border-white/5`} onClick={e => e.stopPropagation()}>
+        <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-8"></div>
+        <h2 className="text-2xl font-bold mb-6 text-textPrimary dark:text-darkTextPrimary px-1 tracking-tight">{initialData ? 'Editar Actividad' : 'Nueva Actividad'}</h2>
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-textSecondary dark:text-darkTextSecondary text-sm font-medium mb-2" htmlFor="date">Fecha</label>
-            <input type="date" id="date" value={initialData?.date || selectedDate} readOnly className="appearance-none border border-separator dark:border-darkSeparator rounded-xl w-full py-3 px-4 text-textPrimary dark:text-darkTextPrimary bg-background dark:bg-darkSurface leading-tight focus:outline-none focus:ring-2 focus:ring-primary" />
+            <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="date">Fecha</label>
+            <input type="date" id="date" value={initialData?.date || selectedDate} readOnly className="appearance-none border-none bg-gray-100 dark:bg-white/10 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary leading-tight focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium" />
+          </div>
+          <div className="grid grid-cols-1 gap-5">
+            <div>
+              <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="territory">Territorio</label>
+              <input id="territory" type="text" value={territory} onChange={e => setTerritory(e.target.value)} required className="appearance-none border border-gray-200 dark:border-white/10 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary bg-white dark:bg-black/20 leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm" placeholder="Ej. Calle Principal 12" />
+            </div>
+            <div>
+              <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="leader">Dirige</label>
+              <input id="leader" type="text" value={leader} onChange={e => setLeader(e.target.value)} required className="appearance-none border border-gray-200 dark:border-white/10 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary bg-white dark:bg-black/20 leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm" placeholder="Nombre del hermano/a" />
+            </div>
           </div>
           <div>
-            <label className="block text-textSecondary dark:text-darkTextSecondary text-sm font-medium mb-2" htmlFor="territory">Territorio</label>
-            <input id="territory" type="text" value={territory} onChange={e => setTerritory(e.target.value)} required className="appearance-none border border-separator dark:border-darkSeparator rounded-xl w-full py-3 px-4 text-textPrimary dark:text-darkTextPrimary bg-surface dark:bg-darkSurface leading-tight focus:outline-none focus:ring-2 focus:ring-primary" />
-          </div>
-          <div>
-            <label className="block text-textSecondary dark:text-darkTextSecondary text-sm font-medium mb-2" htmlFor="leader">Dirige</label>
-            <input id="leader" type="text" value={leader} onChange={e => setLeader(e.target.value)} required className="appearance-none border border-separator dark:border-darkSeparator rounded-xl w-full py-3 px-4 text-textPrimary dark:text-darkTextPrimary bg-surface dark:bg-darkSurface leading-tight focus:outline-none focus:ring-2 focus:ring-primary" />
-          </div>
-          <div>
-            <label className="block text-textSecondary dark:text-darkTextSecondary text-sm font-medium mb-2" htmlFor="description">Descripción (Opcional)</label>
+            <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="description">Notas (Opcional)</label>
             <textarea
               id="description"
               value={description}
               onChange={e => setDescription(e.target.value)}
               rows={3}
-              className="appearance-none border border-separator dark:border-darkSeparator rounded-xl w-full py-3 px-4 text-textPrimary dark:text-darkTextPrimary bg-surface dark:bg-darkSurface leading-tight focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Añade notas o detalles adicionales..."
+              className="appearance-none border border-gray-200 dark:border-white/10 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary bg-white dark:bg-black/20 leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm resize-none"
+              placeholder="Detalles adicionales..."
             />
           </div>
           <div>
-            <label className="block text-textSecondary dark:text-darkTextSecondary text-sm font-medium mb-2" htmlFor="shift">Turno</label>
-            <select id="shift" value={shift} onChange={e => setShift(e.target.value as Shift)} className="appearance-none border border-separator dark:border-darkSeparator rounded-xl w-full py-3 px-4 text-textPrimary dark:text-darkTextPrimary bg-surface dark:bg-darkSurface leading-tight focus:outline-none focus:ring-2 focus:ring-primary">
-              <option value={Shift.MORNING}>Mañana</option>
-              <option value={Shift.AFTERNOON}>Tarde</option>
-            </select>
+            <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="shift">Turno</label>
+            <div className="relative">
+              <select id="shift" value={shift} onChange={e => setShift(e.target.value as Shift)} className="appearance-none border border-gray-200 dark:border-white/10 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary bg-white dark:bg-black/20 leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm">
+                <option value={Shift.MORNING}>Mañana</option>
+                <option value={Shift.AFTERNOON}>Tarde</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-textSecondary">
+                <ChevronRightIcon className="h-4 w-4 rotate-90" />
+              </div>
+            </div>
           </div>
            <div className="pt-2 space-y-3">
-            <label className="flex items-center space-x-3 text-sm font-medium text-textSecondary dark:text-darkTextSecondary">
+            <label className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-white/10">
               <input
                 type="checkbox"
                 checked={reminderEnabled}
                 onChange={handleReminderChange}
-                className="form-checkbox h-5 w-5 text-primary rounded-md focus:ring-primary border-separator dark:border-darkSeparator bg-surface dark:bg-darkSurface"
+                className="form-checkbox h-5 w-5 text-primary rounded-lg focus:ring-primary border-gray-300 dark:border-gray-600 bg-white dark:bg-white/10"
               />
-              <span>Activar recordatorio</span>
+              <span className="text-sm font-medium text-textPrimary dark:text-darkTextPrimary">Activar recordatorio</span>
             </label>
              {notificationMessage && (
-                <div className="bg-amber-500/15 p-3 rounded-xl">
-                    <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">{notificationMessage}</p>
+                <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-2xl">
+                    <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">{notificationMessage}</p>
                 </div>
             )}
           </div>
           {reminderEnabled && (
-            <div className="pt-2">
-              <label className="block text-textSecondary dark:text-darkTextSecondary text-sm font-medium mb-2" htmlFor="reminder-time">Fecha y hora del recordatorio</label>
+            <div className="animate-[fade-in_0.2s_ease-out]">
+              <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="reminder-time">Fecha y hora</label>
               <input
                 type="datetime-local"
                 id="reminder-time"
                 value={reminderDateTime}
                 onChange={e => setReminderDateTime(e.target.value)}
-                className="appearance-none border border-separator dark:border-darkSeparator rounded-xl w-full py-3 px-4 text-textPrimary dark:text-darkTextPrimary bg-surface dark:bg-darkSurface leading-tight focus:outline-none focus:ring-2 focus:ring-primary"
+                className="appearance-none border border-gray-200 dark:border-white/10 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary bg-white dark:bg-black/20 leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm"
               />
-              {validationError && <p className="text-sm text-red-500 mt-2">{validationError}</p>}
+              {validationError && <p className="text-sm text-red-500 mt-2 font-medium px-1">{validationError}</p>}
             </div>
           )}
-          <div className="flex items-center justify-between gap-3 pt-4">
+          
+          <div className="flex items-center gap-3 pt-6">
              {initialData && (
-                <button type="button" onClick={handleDelete} className="bg-red-500/15 text-red-500 font-bold py-3 px-5 rounded-full hover:bg-red-500/25 transition-colors flex items-center gap-2"><TrashIcon className="h-5 w-5" /> Eliminar</button>
+                <button type="button" onClick={handleDelete} className="bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 font-bold p-4 rounded-2xl transition-all active:scale-95 flex-shrink-0" aria-label="Eliminar">
+                  <TrashIcon className="h-6 w-6" />
+                </button>
              )}
             <div className="flex-grow"></div>
-            <button type="button" onClick={onClose} className="bg-gray-500/15 text-textSecondary dark:text-darkTextSecondary font-bold py-3 px-5 rounded-full hover:bg-gray-500/25 transition-colors">Cancelar</button>
-            <button type="submit" className="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-5 rounded-full focus:outline-none focus:shadow-outline transition-transform active:scale-95">Guardar</button>
+            <button type="button" onClick={onClose} className="bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-textPrimary dark:text-darkTextPrimary font-bold py-4 px-6 rounded-2xl transition-all active:scale-95">
+              Cancelar
+            </button>
+            <button type="submit" className="bg-primary hover:bg-primary-dark text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-primary/30 hover:shadow-primary/50 transform transition-all active:scale-95">
+              Guardar
+            </button>
           </div>
         </form>
       </div>
 
       {isConfirmOpen && (
-        <div className="absolute inset-0 bg-black/60 flex justify-center items-center z-40" onClick={() => setIsConfirmOpen(false)}>
-            <div className="bg-surface dark:bg-darkSurface p-6 rounded-3xl shadow-xl w-full max-w-sm m-4 animate-[fade-in_0.2s_ease-out]" onClick={e => e.stopPropagation()}>
-                <h2 className="text-xl font-bold text-center mb-2 text-textPrimary dark:text-darkTextPrimary">Confirmar Eliminación</h2>
-                <p className="text-center text-textSecondary dark:text-darkTextSecondary mb-6">¿Estás seguro de que quieres eliminar esta actividad? Esta acción no se puede deshacer.</p>
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-40" onClick={() => setIsConfirmOpen(false)}>
+            <div className="bg-surface dark:bg-[#1C1C1E] p-8 rounded-3xl shadow-2xl w-full max-w-xs m-4 animate-[scale-up_0.2s_ease-out] border border-white/20 dark:border-white/5" onClick={e => e.stopPropagation()}>
+                <div className="w-16 h-16 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
+                   <TrashIcon className="h-8 w-8" />
+                </div>
+                <h2 className="text-xl font-bold text-center mb-2 text-textPrimary dark:text-darkTextPrimary">¿Eliminar actividad?</h2>
+                <p className="text-center text-textSecondary dark:text-darkTextSecondary mb-8 leading-relaxed text-sm">Esta acción no se puede deshacer y se borrará de tu historial.</p>
                 <div className="flex flex-col gap-3">
                     <button
                         onClick={handleConfirmDelete}
-                        className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-5 rounded-full transition-colors active:scale-95"
+                        className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-5 rounded-2xl shadow-lg shadow-red-500/30 transition-all active:scale-95"
                     >
-                        Eliminar
+                        Sí, eliminar
                     </button>
                     <button
                         onClick={() => setIsConfirmOpen(false)}
-                        className="w-full bg-gray-500/15 text-textPrimary dark:text-darkTextPrimary font-bold py-3 px-5 rounded-full hover:bg-gray-500/25 transition-colors"
+                        className="w-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-textPrimary dark:text-darkTextPrimary font-bold py-4 px-5 rounded-2xl transition-all active:scale-95"
                     >
                         Cancelar
                     </button>
@@ -244,82 +262,41 @@ const MinistryFormModal: React.FC<{
   );
 };
 
-const DaySummaryModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  selectedDate: string;
-  activities: MinistryActivity[];
-  onAdd: () => void;
-  onEdit: (activity: MinistryActivity) => void;
-}> = ({ isOpen, onClose, selectedDate, activities, onAdd, onEdit }) => {
-    if (!isOpen) return null;
-
-    const date = new Date(selectedDate + 'T00:00:00');
-    const formattedDate = date.toLocaleDateString('es-ES', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long'
-    });
-
-    return (
-        <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-end z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={onClose}>
-            <div className={`bg-surface dark:bg-darkSurface p-5 pb-8 rounded-t-3xl shadow-xl w-full max-w-md transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
-                <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-5"></div>
-                <h2 className="text-2xl font-bold mb-1 text-textPrimary dark:text-darkTextPrimary">Resumen del Día</h2>
-                <p className="text-textSecondary dark:text-darkTextSecondary mb-5 capitalize">{formattedDate}</p>
-
-                <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-2 -mr-2">
-                    {activities.map(activity => (
-                        <div key={activity.id} className="bg-background dark:bg-darkBackground p-4 rounded-xl flex items-center justify-between">
-                            <div className="min-w-0 flex-grow">
-                                <div className="flex items-center space-x-2 mb-1">
-                                    <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${activity.shift === Shift.MORNING ? 'bg-blue-500/20 text-blue-600 dark:text-blue-300' : 'bg-orange-500/20 text-orange-600 dark:text-orange-300'}`}>
-                                        {activity.shift === Shift.MORNING ? 'Mañana' : 'Tarde'}
-                                    </span>
-                                    <h3 className="font-bold text-textPrimary dark:text-darkTextPrimary truncate">{activity.territory}</h3>
-                                </div>
-                                <p className="text-sm text-textSecondary dark:text-darkTextSecondary truncate">Dirige: {activity.leader}</p>
-                                {activity.description && <p className="text-sm text-textSecondary dark:text-darkTextSecondary mt-1 italic">"{activity.description}"</p>}
-                            </div>
-                            <div className="flex items-center flex-shrink-0 ml-2">
-                                {activity.reminder && (
-                                    <BellIcon className="h-5 w-5 text-amber-500 mr-1" />
-                                )}
-                                <button onClick={() => onEdit(activity)} className="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary">
-                                    <PencilIcon className="h-5 w-5" />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="mt-6 flex flex-col gap-3">
-                    <button onClick={onAdd} className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 px-5 rounded-full flex items-center justify-center gap-2 transition-transform active:scale-95">
-                        <PlusIcon className="h-5 w-5" />
-                        Añadir Actividad
-                    </button>
-                    <button type="button" onClick={onClose} className="w-full bg-gray-500/15 text-textSecondary dark:text-darkTextSecondary font-bold py-3 px-5 rounded-full hover:bg-gray-500/25 transition-colors">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-
 const CalendarView: React.FC<CalendarViewProps> = ({ activities, onAddActivity, onUpdateActivity, onDeleteActivity }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [modalState, setModalState] = useState<'closed' | 'summary' | 'form'>('closed');
+  const [modalState, setModalState] = useState<'closed' | 'form'>('closed');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [editingActivity, setEditingActivity] = useState<MinistryActivity | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const agendaRef = useRef<HTMLDivElement>(null);
+
+  // Helpers for Agenda Date Calculation
+  const getWeekDates = (baseDateStr: string) => {
+    const date = new Date(baseDateStr + 'T00:00:00');
+    const day = date.getDay(); // 0=Sun, 1=Mon...
+    const diffToMon = day === 0 ? 6 : day - 1; // Adjust so Monday is index 0
+    const monday = new Date(date);
+    monday.setDate(date.getDate() - diffToMon);
+    
+    const week = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const dayStr = String(d.getDate()).padStart(2, '0');
+      week.push(`${year}-${month}-${dayStr}`);
+    }
+    return week;
+  };
+
+  const weekDates = getWeekDates(selectedDate);
 
   const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
   const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
   const daysInMonth = endOfMonth.getDate();
   const startDayOfWeek = (startOfMonth.getDay() + 6) % 7; // Lunes = 0
   
-  const activitiesForSelectedDate = activities.filter(a => a.date === selectedDate);
-
   const days = Array.from({ length: startDayOfWeek }, (_, i) => <div key={`empty-${i}`} className=""></div>);
 
   for (let i = 1; i <= daysInMonth; i++) {
@@ -327,40 +304,51 @@ const CalendarView: React.FC<CalendarViewProps> = ({ activities, onAddActivity, 
     const dateString = dayDate.toISOString().split('T')[0];
     const activitiesForDay = activities.filter(a => a.date === dateString);
     const isToday = dateString === new Date().toISOString().split('T')[0];
+    const isSelected = dateString === selectedDate;
 
     days.push(
-      <div key={i} className="py-2 flex flex-col items-center justify-start min-h-[70px] cursor-pointer rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-200" onClick={() => handleDateClick(dateString)}>
-        <time dateTime={dateString} className={`text-base font-medium w-8 h-8 flex items-center justify-center rounded-full relative ${isToday ? 'text-primary font-bold' : 'text-textPrimary dark:text-darkTextPrimary'}`}>
-          {isToday && <span className="absolute inset-0 rounded-full ring-2 ring-primary/70"></span>}
+      <div 
+        key={i} 
+        className="relative flex flex-col items-center justify-start min-h-[50px] cursor-pointer group"
+        onClick={() => handleDateClick(dateString)}
+      >
+        <time 
+          dateTime={dateString} 
+          className={`
+            text-sm w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300
+            ${isSelected ? 'bg-primary text-white font-bold shadow-lg shadow-primary/40 scale-105' : 
+              isToday ? 'bg-primary/10 text-primary font-bold' : 'text-textPrimary dark:text-darkTextPrimary hover:bg-gray-100 dark:hover:bg-white/10'}
+          `}
+        >
           {i}
         </time>
         {activitiesForDay.length > 0 && (
-          <p className="text-xs text-center font-semibold text-primary-dark dark:text-primary-light mt-1 px-1 truncate w-full">
-            {activitiesForDay[0].territory}
-          </p>
+          <div className="mt-1 flex gap-0.5 justify-center">
+              {activitiesForDay.slice(0, 3).map((_, idx) => (
+                 <div key={idx} className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-primary/30' : 'bg-primary'}`}></div>
+              ))}
+          </div>
         )}
       </div>
     );
   }
 
   const handleDateClick = (date: string) => {
-    const activitiesForDay = activities.filter(a => a.date === date);
     setSelectedDate(date);
-    setEditingActivity(null);
-    if (activitiesForDay.length > 0) {
-        setModalState('summary');
-    } else {
-        setModalState('form');
-    }
   };
   
   const handleAddClick = () => {
-    setSelectedDate(new Date().toISOString().split('T')[0]);
     setEditingActivity(null);
     setModalState('form');
   };
 
-  const handleTransitionToForm = (activity: MinistryActivity | null) => {
+  const handleAddForDate = (date: string) => {
+      setSelectedDate(date);
+      setEditingActivity(null);
+      setModalState('form');
+  };
+
+  const handleTransitionToForm = (activity: MinistryActivity) => {
     setEditingActivity(activity);
     setModalState('form');
   };
@@ -384,30 +372,116 @@ const CalendarView: React.FC<CalendarViewProps> = ({ activities, onAddActivity, 
     setIsImportModalOpen(false);
   };
 
-  const weekdays = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'];
+  const weekdays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
   return (
-    <div className="p-4 animate-[fade-in_0.5s_ease-in-out]">
-      <div className="flex justify-between items-center mb-6 px-2">
-        <h2 className="text-2xl font-bold text-textPrimary dark:text-darkTextPrimary">
-          {currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase())}
+    <div className="px-4 py-2 animate-fade-in">
+      {/* Calendar Header */}
+      <div className="flex justify-between items-center mb-8 px-2">
+        <h2 className="text-3xl font-bold text-textPrimary dark:text-darkTextPrimary capitalize tracking-tight">
+          {currentDate.toLocaleString('es-ES', { month: 'long' })} <span className="text-textSecondary dark:text-darkTextSecondary font-medium">{currentDate.getFullYear()}</span>
         </h2>
-        <div className="flex items-center space-x-1">
-          <button onClick={() => setIsImportModalOpen(true)} className="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary transition-colors" aria-label="Importar con IA">
-            <SparklesIcon className="h-6 w-6" />
+        <div className="flex items-center gap-3">
+          <button onClick={() => setIsImportModalOpen(true)} className="p-3 rounded-full bg-white dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary transition-all shadow-soft active:scale-95 border border-gray-100 dark:border-white/5" aria-label="Importar con IA">
+            <SparklesIcon className="h-5 w-5 text-amber-500" />
           </button>
-          <button onClick={() => changeMonth(-1)} className="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary transition-colors"><ChevronLeftIcon className="h-6 w-6" /></button>
-          <button onClick={() => changeMonth(1)} className="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary transition-colors"><ChevronRightIcon className="h-6 w-6" /></button>
+          <div className="flex bg-white dark:bg-white/5 rounded-full p-1 shadow-soft border border-gray-100 dark:border-white/5">
+              <button onClick={() => changeMonth(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary transition-colors"><ChevronLeftIcon className="h-5 w-5" /></button>
+              <button onClick={() => changeMonth(1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary transition-colors"><ChevronRightIcon className="h-5 w-5" /></button>
+          </div>
         </div>
       </div>
-      <div className="bg-surface dark:bg-darkSurface shadow-xl shadow-slate-200/50 dark:shadow-black/20 rounded-2xl p-4">
-        <div className="grid grid-cols-7">
+
+      {/* Calendar Grid */}
+      <div className="bg-white dark:bg-[#1C1C1E] shadow-soft dark:shadow-none rounded-[2rem] p-6 mb-8 border border-gray-100 dark:border-white/5 relative overflow-hidden">
+        <div className="grid grid-cols-7 mb-4">
             {weekdays.map(day => (
-              <div key={day} className="text-center font-semibold text-sm py-2 text-textSecondary dark:text-darkTextSecondary">{day}</div>
+              <div key={day} className="text-center font-bold text-xs text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider opacity-60">{day}</div>
             ))}
         </div>
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-y-4">
             {days}
+        </div>
+      </div>
+
+      {/* Weekly Agenda */}
+      <div ref={agendaRef} className="animate-slide-up">
+        <div className="flex items-center justify-between px-3 mb-5">
+            <h3 className="text-xl font-bold text-textPrimary dark:text-darkTextPrimary tracking-tight">Agenda Semanal</h3>
+             <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1.5 rounded-full">
+                {new Date(weekDates[0]).toLocaleDateString('es-ES', { day: 'numeric' })} - {new Date(weekDates[6]).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+            </span>
+        </div>
+        
+        <div className="space-y-5 pb-32">
+            {weekDates.map((dateStr) => {
+                const dateObj = new Date(dateStr + 'T00:00:00');
+                const isSelected = dateStr === selectedDate;
+                const isToday = dateStr === new Date().toISOString().split('T')[0];
+                const dayActivities = activities.filter(a => a.date === dateStr).sort((a, b) => {
+                    if (a.shift === b.shift) return 0;
+                    return a.shift === Shift.MORNING ? -1 : 1;
+                });
+                const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'long' });
+                
+                return (
+                    <div key={dateStr} className={`transition-all duration-500 rounded-3xl overflow-hidden ${isSelected ? 'bg-white dark:bg-[#1C1C1E] shadow-glow ring-1 ring-primary/20' : 'bg-white/60 dark:bg-white/5'}`}>
+                        <div className={`px-5 py-4 flex justify-between items-center ${isSelected ? 'bg-gradient-to-r from-primary/5 to-transparent' : ''}`}>
+                            <div className="flex items-baseline gap-3">
+                                <span className={`capitalize font-bold text-lg ${isSelected || isToday ? 'text-primary dark:text-primary-light' : 'text-textSecondary dark:text-darkTextSecondary'}`}>{dayName}</span>
+                                <span className={`text-lg ${isSelected || isToday ? 'text-primary dark:text-primary-light font-bold' : 'text-textSecondary dark:text-darkTextSecondary opacity-60'}`}>{dateObj.getDate()}</span>
+                            </div>
+                            <button onClick={() => handleAddForDate(dateStr)} className="w-9 h-9 rounded-full bg-gray-50 dark:bg-white/10 hover:bg-primary hover:text-white text-primary dark:text-white flex items-center justify-center transition-all shadow-sm active:scale-90">
+                                <PlusIcon className="h-5 w-5" />
+                            </button>
+                        </div>
+                        
+                        <div className="px-2 pb-2">
+                            {dayActivities.length === 0 ? (
+                                isSelected && (
+                                    <div className="pb-4 text-center cursor-pointer" onClick={() => handleAddForDate(dateStr)}>
+                                        <div className="border-2 border-dashed border-gray-200 dark:border-white/10 rounded-2xl py-3 mx-2 hover:border-primary/40 hover:bg-primary/5 transition-all group">
+                                            <span className="text-sm text-textSecondary/50 dark:text-darkTextSecondary/50 font-medium group-hover:text-primary transition-colors">Sin actividades</span>
+                                        </div>
+                                    </div>
+                                )
+                            ) : (
+                                <div className="space-y-2 px-2 pb-3">
+                                    {dayActivities.map(activity => (
+                                        <div 
+                                            key={activity.id} 
+                                            onClick={() => handleTransitionToForm(activity)}
+                                            className="bg-gray-50 dark:bg-black/30 p-4 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-primary/5 dark:hover:bg-white/10 transition-all group border border-transparent hover:border-primary/10"
+                                        >
+                                          <div className="min-w-0">
+                                             <div className="flex items-center gap-2.5 mb-1.5">
+                                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider ${activity.shift === Shift.MORNING ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-200' : 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-200'}`}>
+                                                   {activity.shift === Shift.MORNING ? 'Mañana' : 'Tarde'}
+                                                </span>
+                                                <span className="font-bold text-textPrimary dark:text-darkTextPrimary truncate">{activity.territory}</span>
+                                             </div>
+                                             <div className="flex items-center gap-2 text-xs text-textSecondary dark:text-darkTextSecondary pl-0.5">
+                                                <UsersIcon className="h-3.5 w-3.5 opacity-70" />
+                                                <span className="truncate font-medium">{activity.leader}</span>
+                                             </div>
+                                             {activity.reminder && (
+                                                 <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 mt-2 font-semibold pl-0.5">
+                                                     <BellIcon className="h-3.5 w-3.5" />
+                                                     <span>{new Date(activity.reminder).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                                 </div>
+                                             )}
+                                          </div>
+                                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 dark:text-gray-600 group-hover:text-primary transition-colors">
+                                            <PencilIcon className="h-4 w-4" />
+                                          </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            })}
         </div>
       </div>
       
@@ -419,15 +493,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({ activities, onAddActivity, 
         initialData={editingActivity}
         selectedDate={selectedDate}
       />
-      
-      <DaySummaryModal
-        isOpen={modalState === 'summary'}
-        onClose={() => setModalState('closed')}
-        selectedDate={selectedDate}
-        activities={activitiesForSelectedDate}
-        onAdd={() => handleTransitionToForm(null)}
-        onEdit={handleTransitionToForm}
-      />
 
       <AIImportModal 
         isOpen={isImportModalOpen}
@@ -435,7 +500,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({ activities, onAddActivity, 
         onImport={handleImport}
       />
 
-      <button onClick={handleAddClick} className="fixed bottom-28 right-5 bg-primary hover:bg-primary-dark text-white rounded-2xl p-4 shadow-lg shadow-primary/40 z-20 transform transition-transform hover:scale-105 active:scale-95">
+      <button 
+        onClick={handleAddClick} 
+        className="fixed bottom-28 right-6 bg-primary text-white rounded-[1.2rem] p-4 shadow-lg shadow-primary/40 z-20 transform transition-all duration-300 hover:scale-110 hover:shadow-primary/60 hover:-translate-y-1 active:scale-90 active:translate-y-0"
+        aria-label="Añadir actividad"
+      >
         <PlusIcon className="h-7 w-7" />
       </button>
     </div>

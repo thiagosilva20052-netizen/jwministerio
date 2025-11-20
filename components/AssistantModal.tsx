@@ -88,9 +88,9 @@ const AssistantModal: React.FC<AssistantModalProps> = ({ isOpen, onClose }) => {
     ];
 
     return (
-        <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-end z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={onClose}>
+        <div className={`fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-end z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={onClose}>
             <div 
-              className={`bg-surface dark:bg-darkSurface shadow-xl w-full max-w-md h-[85vh] flex flex-col rounded-t-3xl transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`} 
+              className={`bg-surface dark:bg-darkSurface shadow-2xl w-full max-w-md h-[85vh] flex flex-col rounded-t-3xl transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`} 
               onClick={e => e.stopPropagation()}
               aria-modal="true"
               role="dialog"
@@ -98,25 +98,25 @@ const AssistantModal: React.FC<AssistantModalProps> = ({ isOpen, onClose }) => {
             >
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-separator dark:border-darkSeparator flex-shrink-0">
-                    <h2 id="assistant-title" className="text-xl font-bold text-textPrimary dark:text-darkTextPrimary">Asistente Teocrático</h2>
-                    <button onClick={onClose} className="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" aria-label="Cerrar asistente">
+                    <h2 id="assistant-title" className="text-xl font-bold text-textPrimary dark:text-darkTextPrimary ml-2">Asistente Teocrático</h2>
+                    <button onClick={onClose} className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors" aria-label="Cerrar asistente">
                         <XIcon className="h-6 w-6 text-textSecondary dark:text-darkTextSecondary" />
                     </button>
                 </div>
 
                 {/* Messages */}
                 <div className="flex-grow p-4 overflow-y-auto">
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         {messages.map((msg, index) => (
                            <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[85%] flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                    <div className={`p-3 rounded-2xl whitespace-pre-wrap ${msg.role === 'user' ? 'bg-primary text-white rounded-br-lg' : 'bg-background dark:bg-darkBackground text-textPrimary dark:text-darkTextPrimary rounded-bl-lg'}`}>
+                                    <div className={`p-4 rounded-2xl shadow-sm whitespace-pre-wrap leading-relaxed ${msg.role === 'user' ? 'bg-primary text-white rounded-br-none' : 'bg-white dark:bg-white/5 text-textPrimary dark:text-darkTextPrimary rounded-bl-none border border-gray-100 dark:border-white/5'}`}>
                                         {msg.text}
                                     </div>
                                     {msg.sources && msg.sources.length > 0 && (
-                                        <div className="w-full mt-2 px-3 py-2 text-xs text-textSecondary dark:text-darkTextSecondary rounded-2xl bg-background dark:bg-darkBackground border border-separator dark:border-darkSeparator">
-                                            <h4 className="font-bold mb-1.5 text-textPrimary dark:text-darkTextPrimary">Fuentes Relevantes</h4>
-                                            <ul className="space-y-1.5">
+                                        <div className="w-full mt-2 px-3 py-2 text-xs text-textSecondary dark:text-darkTextSecondary rounded-xl bg-gray-50 dark:bg-black/20 border border-separator dark:border-darkSeparator/50">
+                                            <h4 className="font-bold mb-2 text-textPrimary dark:text-darkTextPrimary">Fuentes Relevantes</h4>
+                                            <ul className="space-y-2">
                                                 {msg.sources.map((source, i) => (
                                                     <li key={i}>
                                                          <a href={source.uri} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-start gap-1.5">
@@ -135,11 +135,11 @@ const AssistantModal: React.FC<AssistantModalProps> = ({ isOpen, onClose }) => {
                         ))}
                         {isLoading && (
                             <div className="flex justify-start">
-                                <div className="max-w-[80%] p-3 rounded-2xl bg-background dark:bg-darkBackground text-textPrimary dark:text-darkTextPrimary rounded-bl-lg">
+                                <div className="max-w-[80%] p-4 rounded-2xl bg-white dark:bg-white/5 text-textPrimary dark:text-darkTextPrimary rounded-bl-none shadow-sm border border-gray-100 dark:border-white/5">
                                     <div className="flex items-center space-x-2">
-                                        <div className="w-2 h-2 bg-textSecondary rounded-full animate-pulse [animation-delay:-0.3s]"></div>
-                                        <div className="w-2 h-2 bg-textSecondary rounded-full animate-pulse [animation-delay:-0.15s]"></div>
-                                        <div className="w-2 h-2 bg-textSecondary rounded-full animate-pulse"></div>
+                                        <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                        <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
                                     </div>
                                 </div>
                             </div>
@@ -149,14 +149,14 @@ const AssistantModal: React.FC<AssistantModalProps> = ({ isOpen, onClose }) => {
                 </div>
                 
                 {messages.length < 3 && (
-                  <div className="p-4 border-t border-separator dark:border-darkSeparator flex-shrink-0">
-                       <div className="flex gap-2 overflow-x-auto pb-2">
+                  <div className="p-4 border-t border-separator dark:border-darkSeparator flex-shrink-0 bg-gray-50/50 dark:bg-black/20">
+                       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                           {suggestions.map(suggestion => (
                               <button 
                                   key={suggestion}
                                   onClick={() => handleSuggestionClick(suggestion)}
                                   disabled={isLoading}
-                                  className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary-light text-sm font-medium px-4 py-2 rounded-full whitespace-nowrap hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors disabled:opacity-50"
+                                  className="bg-white dark:bg-white/5 text-primary dark:text-primary-light border border-primary/10 dark:border-white/10 text-sm font-medium px-4 py-2.5 rounded-2xl whitespace-nowrap hover:bg-primary/5 dark:hover:bg-white/10 transition-all shadow-sm active:scale-95 disabled:opacity-50"
                               >
                                   {suggestion}
                               </button>
@@ -167,7 +167,7 @@ const AssistantModal: React.FC<AssistantModalProps> = ({ isOpen, onClose }) => {
 
 
                 {/* Input */}
-                <div className="p-4 bg-background dark:bg-darkBackground flex-shrink-0">
+                <div className="p-4 bg-surface dark:bg-darkSurface flex-shrink-0">
                     <div className="flex items-center space-x-3">
                         <input
                             type="text"
@@ -175,14 +175,14 @@ const AssistantModal: React.FC<AssistantModalProps> = ({ isOpen, onClose }) => {
                             onChange={(e) => setUserInput(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                             placeholder="Escribe tu pregunta..."
-                            className="flex-grow appearance-none border border-separator dark:border-darkSeparator rounded-full w-full py-3 px-5 text-textPrimary dark:text-darkTextPrimary bg-surface dark:bg-darkSurface leading-tight focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="flex-grow appearance-none border border-separator dark:border-darkSeparator bg-gray-50 dark:bg-black/20 rounded-2xl w-full py-3.5 px-5 text-textPrimary dark:text-darkTextPrimary leading-tight focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                             disabled={isLoading}
                             aria-label="Escribe tu pregunta para el asistente"
                         />
                         <button 
                             onClick={handleSend}
                             disabled={isLoading || userInput.trim() === ''}
-                            className="bg-primary text-white rounded-full p-3.5 shadow-lg shadow-primary/40 disabled:bg-gray-400 disabled:shadow-none transition-all duration-200 active:scale-95 transform hover:scale-105"
+                            className="bg-gradient-to-r from-primary to-blue-600 text-white rounded-2xl p-3.5 shadow-lg shadow-blue-500/30 disabled:bg-none disabled:bg-gray-300 disabled:shadow-none transition-all duration-200 active:scale-90 transform hover:scale-105 disabled:transform-none"
                             aria-label="Enviar mensaje"
                         >
                             <PaperAirplaneIcon className="h-6 w-6" />
