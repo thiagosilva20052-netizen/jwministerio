@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { SchoolAssignment, MeetingDuty } from '../types';
 import { PlusIcon, TrashIcon, PencilIcon, BellIcon } from './icons';
@@ -72,13 +71,13 @@ const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClo
 
     if (reminderEnabled) {
       if (!reminderDateTime) {
-        setValidationError('Por favor, selecciona una fecha y hora válidas para el recordatorio.');
+        setValidationError('Por favor, selecciona una fecha y hora válidas.');
         return;
       }
       const reminderDate = new Date(reminderDateTime);
       const now = new Date();
       if (reminderDate <= now) {
-        setValidationError('La fecha del recordatorio no puede ser en el pasado. Por favor, elige una fecha futura.');
+        setValidationError('La fecha del recordatorio debe ser futura.');
         return;
       }
     }
@@ -130,13 +129,6 @@ const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClo
     }
 
     let permission = Notification.permission;
-    
-    if (permission === 'denied') {
-      setNotificationMessage('Las notificaciones están bloqueadas. Para habilitarlas, busca el icono del candado (🔒) en la barra de direcciones de tu navegador, haz clic en él y permite las notificaciones para este sitio.');
-      e.target.checked = false;
-      return;
-    }
-
     if (permission === 'default') {
       permission = await Notification.requestPermission();
     }
@@ -145,7 +137,7 @@ const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClo
       setReminderEnabled(true);
     } else {
       setReminderEnabled(false);
-      setNotificationMessage('Permiso denegado. Para recibir recordatorios, necesitas permitir las notificaciones.');
+      setNotificationMessage('Permiso denegado para notificaciones.');
       e.target.checked = false;
     }
   };
@@ -156,79 +148,69 @@ const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClo
   const field2Label = type === 'school' ? 'Asignación' : 'Deber';
 
   return (
-     <div className={`fixed inset-0 bg-black/40 backdrop-blur-md flex justify-center items-end z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={!isConfirmOpen ? onClose : undefined}>
-      <div className={`bg-surface dark:bg-[#1C1C1E] p-6 pb-10 rounded-t-[2.5rem] shadow-2xl w-full max-w-[480px] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'} border-t border-white/20 dark:border-white/5`} onClick={e => e.stopPropagation()}>
-         <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-8"></div>
-        <h2 className="text-2xl font-bold mb-6 text-textPrimary dark:text-darkTextPrimary px-1 tracking-tight">{`${title} ${typeTitle}`}</h2>
+     <div className={`fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-end z-50 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={!isConfirmOpen ? onClose : undefined}>
+      <div className={`bg-[#1E293B] border-t border-white/10 p-6 pb-10 rounded-t-[2rem] shadow-2xl w-full max-w-[480px] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
+         <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-8"></div>
+        <h2 className="text-2xl font-bold mb-6 text-white px-1 tracking-tight">{`${title} ${typeTitle}`}</h2>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="date">Fecha de inicio</label>
-            <input type="date" id="date" value={date} onChange={e => setDate(e.target.value)} required className="appearance-none border-none bg-gray-100 dark:bg-white/10 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary leading-tight focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium" />
+            <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="date">Fecha de inicio</label>
+            <input type="date" id="date" value={date} onChange={e => setDate(e.target.value)} required className="appearance-none border-none bg-white/5 rounded-2xl w-full py-4 px-5 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium" />
           </div>
            <div>
-            <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="endDate">Fecha de finalización (Opcional)</label>
-            <input type="date" id="endDate" value={endDate} onChange={e => setEndDate(e.target.value)} min={date} className="appearance-none border-none bg-gray-100 dark:bg-white/10 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary leading-tight focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium" />
+            <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="endDate">Fecha de finalización (Opcional)</label>
+            <input type="date" id="endDate" value={endDate} onChange={e => setEndDate(e.target.value)} min={date} className="appearance-none border-none bg-white/5 rounded-2xl w-full py-4 px-5 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium" />
           </div>
           <div>
-            <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="field1">{field1Label}</label>
-            <input id="field1" type="text" value={field1} onChange={e => setField1(e.target.value)} required className="appearance-none border border-gray-200 dark:border-white/10 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary bg-white dark:bg-black/20 leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm" />
+            <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="field1">{field1Label}</label>
+            <input id="field1" type="text" value={field1} onChange={e => setField1(e.target.value)} required className="appearance-none border border-white/10 rounded-2xl w-full py-4 px-5 text-white bg-black/20 leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-inner" />
           </div>
           <div>
-            <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="field2">{field2Label}</label>
-            <input id="field2" type="text" value={field2} onChange={e => setField2(e.target.value)} required className="appearance-none border border-gray-200 dark:border-white/10 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary bg-white dark:bg-black/20 leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm" />
+            <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="field2">{field2Label}</label>
+            <input id="field2" type="text" value={field2} onChange={e => setField2(e.target.value)} required className="appearance-none border border-white/10 rounded-2xl w-full py-4 px-5 text-white bg-black/20 leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-inner" />
           </div>
           <div className="pt-2 space-y-3">
-            <label className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-white/10">
-              <input type="checkbox" checked={reminderEnabled} onChange={handleReminderChange} className="form-checkbox h-5 w-5 text-primary rounded-lg focus:ring-primary border-gray-300 dark:border-gray-600 bg-white dark:bg-white/10" />
-              <span className="text-sm font-medium text-textPrimary dark:text-darkTextPrimary">Activar recordatorio</span>
+            <label className="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-transparent hover:border-white/10">
+              <input type="checkbox" checked={reminderEnabled} onChange={handleReminderChange} className="form-checkbox h-5 w-5 text-primary rounded-lg focus:ring-primary border-gray-600 bg-black/40" />
+              <span className="text-sm font-medium text-white">Activar recordatorio</span>
             </label>
             {notificationMessage && (
                 <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-2xl">
-                    <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">{notificationMessage}</p>
+                    <p className="text-sm text-amber-400 font-medium">{notificationMessage}</p>
                 </div>
             )}
           </div>
           {reminderEnabled && (
             <div className="animate-[fade-in_0.2s_ease-out]">
-              <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="reminder-time">Fecha y hora</label>
-              <input type="datetime-local" id="reminder-time" value={reminderDateTime} onChange={e => setReminderDateTime(e.target.value)} className="appearance-none border border-gray-200 dark:border-white/10 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary bg-white dark:bg-black/20 leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm" />
-              {validationError && <p className="text-sm text-red-500 mt-2 font-medium px-1">{validationError}</p>}
+              <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="reminder-time">Fecha y hora</label>
+              <input type="datetime-local" id="reminder-time" value={reminderDateTime} onChange={e => setReminderDateTime(e.target.value)} className="appearance-none border border-white/10 rounded-2xl w-full py-4 px-5 text-white bg-black/20 leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-inner" />
+              {validationError && <p className="text-sm text-red-400 mt-2 font-medium px-1">{validationError}</p>}
             </div>
           )}
            <div className="flex items-center gap-3 pt-6">
              {initialData && (
-                <button type="button" onClick={handleDelete} className="bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 font-bold p-4 rounded-2xl transition-all active:scale-95 flex-shrink-0" aria-label="Eliminar">
+                <button type="button" onClick={handleDelete} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold p-4 rounded-2xl transition-all active:scale-95 flex-shrink-0 border border-red-500/20" aria-label="Eliminar">
                   <TrashIcon className="h-6 w-6" />
                 </button>
              )}
             <div className="flex-grow"></div>
-            <button type="button" onClick={onClose} className="bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-textPrimary dark:text-darkTextPrimary font-bold py-4 px-6 rounded-2xl transition-all active:scale-95">Cancelar</button>
-            <button type="submit" className="bg-primary hover:bg-primary-dark text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-primary/30 hover:shadow-primary/50 transform transition-all active:scale-95">Guardar</button>
+            <button type="button" onClick={onClose} className="bg-white/5 hover:bg-white/10 text-white font-bold py-4 px-6 rounded-2xl transition-all active:scale-95 border border-white/5">Cancelar</button>
+            <button type="submit" className="bg-gradient-to-r from-primary to-blue-600 text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-primary/30 transform transition-all active:scale-95">Guardar</button>
           </div>
         </form>
       </div>
 
       {isConfirmOpen && (
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-40" onClick={() => setIsConfirmOpen(false)}>
-            <div className="bg-surface dark:bg-[#1C1C1E] p-8 rounded-3xl shadow-2xl w-full max-w-xs m-4 animate-[scale-up_0.2s_ease-out] border border-white/20 dark:border-white/5" onClick={e => e.stopPropagation()}>
-                <div className="w-16 h-16 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex justify-center items-center z-[60]" onClick={() => setIsConfirmOpen(false)}>
+            <div className="bg-[#1E293B] p-8 rounded-3xl shadow-2xl w-full max-w-xs m-4 border border-white/10" onClick={e => e.stopPropagation()}>
+                <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500 shadow-glow">
                    <TrashIcon className="h-8 w-8" />
                 </div>
-                <h2 className="text-xl font-bold text-center mb-2 text-textPrimary dark:text-darkTextPrimary">¿Eliminar elemento?</h2>
-                <p className="text-center text-textSecondary dark:text-darkTextSecondary mb-8 leading-relaxed text-sm">Esta acción no se puede deshacer y se borrará de tu historial.</p>
+                <h2 className="text-xl font-bold text-center mb-2 text-white">¿Eliminar elemento?</h2>
+                <p className="text-center text-textSecondary mb-8 leading-relaxed text-sm">Esta acción no se puede deshacer.</p>
                 <div className="flex flex-col gap-3">
-                    <button
-                        onClick={handleConfirmDelete}
-                        className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-5 rounded-2xl shadow-lg shadow-red-500/30 transition-all active:scale-95"
-                    >
-                        Sí, eliminar
-                    </button>
-                    <button
-                        onClick={() => setIsConfirmOpen(false)}
-                        className="w-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-textPrimary dark:text-darkTextPrimary font-bold py-4 px-5 rounded-2xl transition-all active:scale-95"
-                    >
-                        Cancelar
-                    </button>
+                    <button onClick={handleConfirmDelete} className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-5 rounded-2xl shadow-lg shadow-red-500/30 active:scale-95">Sí, eliminar</button>
+                    <button onClick={() => setIsConfirmOpen(false)} className="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-4 px-5 rounded-2xl active:scale-95">Cancelar</button>
                 </div>
             </div>
         </div>
@@ -332,7 +314,7 @@ const AssignmentList: React.FC<AssignmentListProps> = (props) => {
     return (
       <div 
         key={item.id}
-        className={`bg-white dark:bg-[#1C1C1E] rounded-2xl p-4 flex items-center justify-between transition-all duration-300 shadow-soft dark:shadow-none border border-gray-100 dark:border-white/5 hover:scale-[1.02] ${item.completed ? 'opacity-70' : ''}`}
+        className={`bg-black/30 backdrop-blur-md rounded-2xl p-4 flex items-center justify-between transition-all duration-300 border border-white/10 hover:bg-white/5 ${item.completed ? 'opacity-60' : 'shadow-glass'}`}
       >
         <div className="flex items-center space-x-4 flex-grow min-w-0">
             <div className="relative flex items-center justify-center">
@@ -340,15 +322,15 @@ const AssignmentList: React.FC<AssignmentListProps> = (props) => {
                   type="checkbox"
                   checked={!!item.completed}
                   onChange={() => handleToggleComplete(item)}
-                  className="h-6 w-6 rounded-lg text-primary focus:ring-primary border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-white/5 flex-shrink-0 cursor-pointer transition-all"
+                  className="h-6 w-6 rounded-lg text-primary focus:ring-primary border-gray-600 bg-black/40 flex-shrink-0 cursor-pointer transition-all"
                   aria-label={`Marcar como completada`}
               />
             </div>
             <div className="flex-grow min-w-0">
-              <p className={`font-bold text-textPrimary dark:text-darkTextPrimary truncate text-lg ${textStyle}`}>{mainText}</p>
-              <p className={`text-sm text-textSecondary dark:text-darkTextSecondary truncate ${textStyle}`}>{subText}</p>
+              <p className={`font-bold text-white truncate text-lg ${textStyle}`}>{mainText}</p>
+              <p className={`text-sm text-textSecondary truncate ${textStyle}`}>{subText}</p>
               {item.endDate && item.endDate !== item.date && (
-                <p className="text-[10px] font-bold text-textSecondary dark:text-darkTextSecondary mt-1.5 bg-gray-100 dark:bg-white/5 w-fit px-2 py-1 rounded-md uppercase tracking-wider">
+                <p className="text-[10px] font-bold text-textSecondary mt-1.5 bg-white/5 w-fit px-2 py-1 rounded-md uppercase tracking-wider border border-white/5">
                     Finaliza: {new Date(item.endDate + 'T00:00:00').toLocaleDateString('es-ES', { 
                         month: 'short', 
                         day: 'numeric',
@@ -359,8 +341,8 @@ const AssignmentList: React.FC<AssignmentListProps> = (props) => {
             </div>
         </div>
         <div className="flex items-center space-x-2 flex-shrink-0 pl-2">
-           {item.reminder && <BellIcon className="h-5 w-5 text-amber-500 drop-shadow-sm" />}
-          <button onClick={() => handleEdit(item)} className="w-10 h-10 rounded-full bg-gray-50 dark:bg-white/5 hover:bg-primary hover:text-white text-textSecondary dark:text-darkTextSecondary flex items-center justify-center transition-colors">
+           {item.reminder && <BellIcon className="h-5 w-5 text-accent-cyan drop-shadow-sm" />}
+          <button onClick={() => handleEdit(item)} className="w-10 h-10 rounded-full bg-white/5 hover:bg-primary hover:text-white text-textSecondary flex items-center justify-center transition-colors border border-white/5">
             <PencilIcon className="h-4 w-4" />
           </button>
         </div>
@@ -371,18 +353,17 @@ const AssignmentList: React.FC<AssignmentListProps> = (props) => {
   return (
     <div className="px-4 py-2 space-y-8 animate-fade-in pb-32">
       {pendingItems.length === 0 && completedItems.length === 0 ? (
-        <div className="flex flex-col items-center justify-center text-center text-textSecondary dark:text-darkTextSecondary py-24 px-4 opacity-60">
-             <div className="w-20 h-20 bg-gray-200 dark:bg-white/5 rounded-full flex items-center justify-center mb-4">
+        <div className="flex flex-col items-center justify-center text-center text-textSecondary py-24 px-4 opacity-60">
+             <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4 border border-white/5">
                  <PlusIcon className="h-8 w-8 opacity-50" />
              </div>
             <p className="text-lg font-medium">No hay {type === 'school' ? 'asignaciones' : 'deberes'} todavía.</p>
-            <p className="mt-2 text-sm">Pulsa el botón <span className="inline-flex items-center justify-center align-middle w-6 h-6 bg-primary/10 text-primary rounded-md font-bold text-lg mx-1">+</span> para añadir una.</p>
         </div>
       ) : (
         <>
             {Object.entries(groupedPendingItems).map(([date, itemsForDate]) => (
               <div key={date}>
-                <h3 className="text-xs font-bold text-textSecondary dark:text-darkTextSecondary tracking-widest uppercase pb-4 px-2 opacity-70">{date}</h3>
+                <h3 className="text-xs font-bold text-textSecondary tracking-widest uppercase pb-4 px-2 opacity-70">{date}</h3>
                 <div className="space-y-3">
                   {(itemsForDate as Item[]).map(item => renderItem(item))}
                 </div>
@@ -391,7 +372,7 @@ const AssignmentList: React.FC<AssignmentListProps> = (props) => {
             
             {completedItems.length > 0 && (
                 <div className="pt-8">
-                    <h3 className="text-xs font-bold text-textSecondary dark:text-darkTextSecondary tracking-widest uppercase pb-4 px-2 border-t border-gray-200 dark:border-white/5 pt-8 opacity-70">Completadas</h3>
+                    <h3 className="text-xs font-bold text-textSecondary tracking-widest uppercase pb-4 px-2 border-t border-white/5 pt-8 opacity-70">Completadas</h3>
                     <div className="space-y-3">
                         {completedItems.map(item => renderItem(item))}
                     </div>
@@ -411,7 +392,7 @@ const AssignmentList: React.FC<AssignmentListProps> = (props) => {
 
       <button 
         onClick={handleAdd} 
-        className="fixed bottom-28 right-6 bg-primary text-white rounded-[1.2rem] p-4 shadow-lg shadow-primary/40 z-20 transform transition-all duration-300 hover:scale-110 hover:shadow-primary/60 hover:-translate-y-1 active:scale-90 active:translate-y-0"
+        className="fixed bottom-24 right-6 bg-gradient-to-r from-primary to-blue-600 text-white rounded-[1.2rem] p-4 shadow-[0_0_20px_rgba(59,130,246,0.6)] z-40 transform transition-all duration-300 hover:scale-110 hover:-translate-y-1 active:scale-90 border border-white/20"
         aria-label="Añadir nuevo"
       >
         <PlusIcon className="h-7 w-7" />

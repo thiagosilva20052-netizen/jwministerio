@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { View, MinistryActivity, SchoolAssignment, MeetingDuty, ServiceEntry } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
@@ -17,11 +16,10 @@ const App: React.FC = () => {
   const [schoolAssignments, setSchoolAssignments] = useLocalStorage<SchoolAssignment[]>('schoolAssignments', []);
   const [meetingDuties, setMeetingDuties] = useLocalStorage<MeetingDuty[]>('meetingDuties', []);
   const [serviceEntries, setServiceEntries] = useLocalStorage<ServiceEntry[]>('serviceEntries', []);
-  const [appTitle, setAppTitle] = useLocalStorage<string>('appTitle', 'Asistente del Ministerio');
+  const [appTitle, setAppTitle] = useLocalStorage<string>('appTitle', 'Asistente');
   const [monthlyGoal, setMonthlyGoal] = useLocalStorage<number>('monthlyGoal', 50);
 
-  const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const [isDarkMode, setIsDarkMode] = useLocalStorage<boolean>('isDarkMode', prefersDarkMode);
+  const [isDarkMode, setIsDarkMode] = useLocalStorage<boolean>('isDarkMode', true); // Default to true for Pro theme
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
 
   useReminders(ministryActivities, schoolAssignments, meetingDuties);
@@ -41,7 +39,7 @@ const App: React.FC = () => {
     [View.SCHOOL]: 'Vida y Ministerio',
     [View.DUTIES]: 'Deberes',
     [View.SERVICE_LOG]: 'Registro',
-    [View.SETTINGS]: 'Configuración',
+    [View.SETTINGS]: 'Ajustes',
   };
 
   // Ministry CRUD
@@ -193,20 +191,14 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="h-[100dvh] w-screen font-sans flex items-center justify-center p-0 relative overflow-hidden bg-gray-50 dark:bg-black transition-colors duration-500">
+    <div className="h-[100dvh] w-full font-sans text-white flex flex-col bg-[#020617] transition-colors duration-500 overflow-hidden">
       
-      {/* Ambient Background Blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/20 dark:bg-blue-900/20 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-70 animate-blob pointer-events-none"></div>
-      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-400/20 dark:bg-indigo-900/20 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-70 animate-blob animation-delay-2000 pointer-events-none"></div>
-      <div className="absolute bottom-[-20%] left-[20%] w-[50%] h-[50%] bg-pink-400/20 dark:bg-purple-900/20 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-70 animate-blob animation-delay-4000 pointer-events-none"></div>
-
-      {/* 
-          Main Container Logic:
-          - bg-[#F2F2F7]/90: Use iOS system gray with high opacity for light mode. This contrasts with white cards.
-          - bg-black/90: Use black with high opacity for dark mode. This contrasts with dark gray cards.
-          - h-full: Takes full height of the 100dvh wrapper.
-      */}
-      <div className="max-w-[480px] mx-auto h-full w-full bg-[#F2F2F7]/90 dark:bg-black/90 backdrop-blur-3xl shadow-2xl relative overflow-hidden flex flex-col transition-all duration-300 sm:h-[92vh] sm:rounded-[2.5rem] sm:border sm:border-white/40 dark:sm:border-white/5">
+      {/* Pro Background: Gradient Orbs */}
+      <div className="fixed top-[-20%] left-[-10%] w-[80%] h-[60%] bg-blue-600/20 rounded-full mix-blend-screen filter blur-[100px] animate-pulse-slow pointer-events-none z-0"></div>
+      <div className="fixed bottom-[-10%] right-[-10%] w-[80%] h-[60%] bg-purple-600/15 rounded-full mix-blend-screen filter blur-[100px] animate-pulse-slow pointer-events-none z-0"></div>
+      
+      {/* Header - Fixed at top */}
+      <div className="flex-shrink-0 relative z-20">
         <Header 
           appTitle={appTitle}
           setAppTitle={setAppTitle}
@@ -215,14 +207,17 @@ const App: React.FC = () => {
           setIsDarkMode={setIsDarkMode} 
           onToggleAssistant={() => setIsAssistantOpen(prev => !prev)}
         />
-        <main className="flex-grow pt-24 pb-[env(safe-area-inset-bottom)] overflow-y-auto overscroll-contain scrollbar-hide">
-           <div key={currentView} className="min-h-full pb-24">
-             {renderContent()}
-           </div>
-        </main>
-        <BottomNav currentView={currentView} setView={setCurrentView} />
-        <AssistantModal isOpen={isAssistantOpen} onClose={() => setIsAssistantOpen(false)} />
       </div>
+      
+      {/* Content Scroll Area - Flex grow to fill space */}
+      <main className="flex-1 overflow-y-auto overscroll-contain scrollbar-hide pb-[100px] relative z-10 w-full max-w-[600px] mx-auto">
+           {renderContent()}
+      </main>
+      
+      {/* Bottom Navigation - Fixed at bottom */}
+      <BottomNav currentView={currentView} setView={setCurrentView} />
+      
+      <AssistantModal isOpen={isAssistantOpen} onClose={() => setIsAssistantOpen(false)} />
     </div>
   );
 };

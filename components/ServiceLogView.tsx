@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ServiceEntry } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon, PlayIcon, PauseIcon, StopIcon } from './icons';
@@ -47,7 +46,7 @@ const ServiceFormModal: React.FC<ServiceFormModalProps> = ({ isOpen, onClose, on
     }
 
     if (hours < 0) {
-        setValidationError('Las horas no pueden ser un número negativo.');
+        setValidationError('Las horas no pueden ser negativas.');
         return;
     }
 
@@ -74,18 +73,18 @@ const ServiceFormModal: React.FC<ServiceFormModalProps> = ({ isOpen, onClose, on
   };
 
   return (
-    <div className={`fixed inset-0 bg-black/40 backdrop-blur-md flex justify-center items-end z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={!isConfirmOpen ? onClose : undefined}>
-      <div className={`bg-surface dark:bg-[#1C1C1E] p-6 pb-10 rounded-t-[2.5rem] shadow-2xl w-full max-w-[480px] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'} border-t border-white/20 dark:border-white/5`} onClick={e => e.stopPropagation()}>
-        <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-8"></div>
-        <h2 className="text-2xl font-bold mb-6 text-textPrimary dark:text-darkTextPrimary px-1 tracking-tight">{initialData ? 'Editar Registro' : 'Añadir Registro'}</h2>
+    <div className={`fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-end z-50 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={!isConfirmOpen ? onClose : undefined}>
+      <div className={`bg-[#1E293B] border-t border-white/10 p-6 pb-10 rounded-t-[2rem] shadow-2xl w-full max-w-[480px] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
+        <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-8"></div>
+        <h2 className="text-2xl font-bold mb-6 text-white px-1 tracking-tight">{initialData ? 'Editar Registro' : 'Añadir Registro'}</h2>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="date">Fecha</label>
-            <input type="date" id="date" value={selectedDate} readOnly className="appearance-none border-none bg-gray-100 dark:bg-white/10 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary leading-tight focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium" />
+            <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="date">Fecha</label>
+            <input type="date" id="date" value={selectedDate} readOnly className="appearance-none border-none bg-white/5 rounded-2xl w-full py-4 px-5 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="hours">Horas</label>
+              <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="hours">Horas</label>
               <input 
                 id="hours" 
                 type="number" 
@@ -93,63 +92,53 @@ const ServiceFormModal: React.FC<ServiceFormModalProps> = ({ isOpen, onClose, on
                 min="0" 
                 value={hours} 
                 onChange={e => setHours(e.target.value === '' ? '' : parseFloat(e.target.value))} 
-                className={`appearance-none border-none rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary bg-gray-50 dark:bg-white/5 leading-tight focus:outline-none focus:ring-2 transition-all shadow-sm text-lg font-bold ${validationError ? 'ring-2 ring-red-500 bg-red-50 dark:bg-red-900/20' : 'focus:ring-primary'}`}
+                className={`appearance-none border-none rounded-2xl w-full py-4 px-5 text-white bg-black/20 leading-tight focus:outline-none focus:ring-2 transition-all shadow-inner text-lg font-bold ${validationError ? 'ring-2 ring-red-500 bg-red-900/20' : 'focus:ring-primary'}`}
               />
             </div>
             <div>
-              <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="placements">Colocaciones</label>
-              <input id="placements" type="number" min="0" value={placements} onChange={e => setPlacements(e.target.value === '' ? '' : parseInt(e.target.value))} className="appearance-none border-none bg-gray-50 dark:bg-white/5 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm text-lg" />
+              <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="placements">Colocaciones</label>
+              <input id="placements" type="number" min="0" value={placements} onChange={e => setPlacements(e.target.value === '' ? '' : parseInt(e.target.value))} className="appearance-none border-none bg-black/20 rounded-2xl w-full py-4 px-5 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-inner text-lg" />
             </div>
             <div>
-              <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="videos">Videos</label>
-              <input id="videos" type="number" min="0" value={videos} onChange={e => setVideos(e.target.value === '' ? '' : parseInt(e.target.value))} className="appearance-none border-none bg-gray-50 dark:bg-white/5 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm text-lg" />
+              <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="videos">Videos</label>
+              <input id="videos" type="number" min="0" value={videos} onChange={e => setVideos(e.target.value === '' ? '' : parseInt(e.target.value))} className="appearance-none border-none bg-black/20 rounded-2xl w-full py-4 px-5 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-inner text-lg" />
             </div>
             <div>
-              <label className="block text-textSecondary dark:text-darkTextSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="returnVisits">Revisitas</label>
-              <input id="returnVisits" type="number" min="0" value={returnVisits} onChange={e => setReturnVisits(e.target.value === '' ? '' : parseInt(e.target.value))} className="appearance-none border-none bg-gray-50 dark:bg-white/5 rounded-2xl w-full py-4 px-5 text-textPrimary dark:text-darkTextPrimary leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm text-lg" />
+              <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="returnVisits">Revisitas</label>
+              <input id="returnVisits" type="number" min="0" value={returnVisits} onChange={e => setReturnVisits(e.target.value === '' ? '' : parseInt(e.target.value))} className="appearance-none border-none bg-black/20 rounded-2xl w-full py-4 px-5 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-inner text-lg" />
             </div>
           </div>
           
           {validationError && (
              <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4">
-                <p className="text-sm text-red-600 dark:text-red-400 font-medium text-center">{validationError}</p>
+                <p className="text-sm text-red-400 font-medium text-center">{validationError}</p>
              </div>
           )}
 
           <div className="flex items-center gap-3 pt-6">
              {initialData && (
-                <button type="button" onClick={handleDelete} className="bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 font-bold p-4 rounded-2xl transition-all active:scale-95 flex-shrink-0" aria-label="Eliminar">
+                <button type="button" onClick={handleDelete} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold p-4 rounded-2xl transition-all active:scale-95 flex-shrink-0 border border-red-500/20" aria-label="Eliminar">
                    <TrashIcon className="h-6 w-6" />
                 </button>
              )}
             <div className="flex-grow"></div>
-            <button type="button" onClick={onClose} className="bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-textPrimary dark:text-darkTextPrimary font-bold py-4 px-6 rounded-2xl transition-all active:scale-95">Cancelar</button>
-            <button type="submit" className="bg-primary hover:bg-primary-dark text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-primary/30 hover:shadow-primary/50 transform transition-all active:scale-95">Guardar</button>
+            <button type="button" onClick={onClose} className="bg-white/5 hover:bg-white/10 text-white font-bold py-4 px-6 rounded-2xl transition-all active:scale-95 border border-white/5">Cancelar</button>
+            <button type="submit" className="bg-gradient-to-r from-primary to-blue-600 text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-primary/30 transform transition-all active:scale-95">Guardar</button>
           </div>
         </form>
       </div>
       
       {isConfirmOpen && (
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-40" onClick={() => setIsConfirmOpen(false)}>
-            <div className="bg-surface dark:bg-[#1C1C1E] p-8 rounded-3xl shadow-2xl w-full max-w-xs m-4 animate-[scale-up_0.2s_ease-out] border border-white/20 dark:border-white/5" onClick={e => e.stopPropagation()}>
-                <div className="w-16 h-16 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex justify-center items-center z-[60]" onClick={() => setIsConfirmOpen(false)}>
+            <div className="bg-[#1E293B] p-8 rounded-3xl shadow-2xl w-full max-w-xs m-4 border border-white/10" onClick={e => e.stopPropagation()}>
+                <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500 shadow-glow">
                    <TrashIcon className="h-8 w-8" />
                 </div>
-                <h2 className="text-xl font-bold text-center mb-2 text-textPrimary dark:text-darkTextPrimary">¿Eliminar registro?</h2>
-                <p className="text-center text-textSecondary dark:text-darkTextSecondary mb-8 leading-relaxed text-sm">Esta acción no se puede deshacer y afectará a tus totales mensuales.</p>
+                <h2 className="text-xl font-bold text-center mb-2 text-white">¿Eliminar registro?</h2>
+                <p className="text-center text-textSecondary mb-8 leading-relaxed text-sm">Se borrará de tus estadísticas.</p>
                 <div className="flex flex-col gap-3">
-                    <button
-                        onClick={handleConfirmDelete}
-                        className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-5 rounded-2xl shadow-lg shadow-red-500/30 transition-all active:scale-95"
-                    >
-                        Sí, eliminar
-                    </button>
-                    <button
-                        onClick={() => setIsConfirmOpen(false)}
-                        className="w-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-textPrimary dark:text-darkTextPrimary font-bold py-4 px-5 rounded-2xl transition-all active:scale-95"
-                    >
-                        Cancelar
-                    </button>
+                    <button onClick={handleConfirmDelete} className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-5 rounded-2xl shadow-lg shadow-red-500/30 active:scale-95">Sí, eliminar</button>
+                    <button onClick={() => setIsConfirmOpen(false)} className="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-4 px-5 rounded-2xl active:scale-95">Cancelar</button>
                 </div>
             </div>
         </div>
@@ -237,28 +226,28 @@ const Stopwatch: React.FC<{ onSave: (hours: number) => void }> = ({ onSave }) =>
   };
 
   return (
-    <div className="bg-white dark:bg-[#1C1C1E] shadow-soft dark:shadow-none border border-gray-100 dark:border-white/5 rounded-[2rem] p-6 mb-6 flex items-center justify-between relative overflow-hidden">
-        {state === 'RUNNING' && (
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-blue-400/5 animate-pulse pointer-events-none"></div>
-        )}
+    <div className="bg-black/30 backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 mb-6 flex items-center justify-between relative overflow-hidden shadow-glass group">
+        {/* Subtle Glow Effect */}
+        <div className={`absolute -inset-1 bg-gradient-to-r from-primary to-purple-600 rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 ${state === 'RUNNING' ? 'opacity-50 animate-pulse' : ''}`}></div>
+        
         <div className="flex flex-col relative z-10 pl-2">
-            <span className="text-xs font-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-widest mb-1.5">Cronómetro</span>
-            <span className={`text-5xl font-mono font-bold tabular-nums tracking-tighter ${state === 'RUNNING' ? 'text-transparent bg-clip-text bg-gradient-to-br from-primary to-blue-400' : 'text-textPrimary dark:text-darkTextPrimary'}`}>
+            <span className="text-xs font-bold text-textSecondary uppercase tracking-widest mb-1.5">Cronómetro</span>
+            <span className={`text-5xl font-mono font-bold tabular-nums tracking-tighter ${state === 'RUNNING' ? 'text-transparent bg-clip-text bg-gradient-to-br from-white to-blue-200 drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]' : 'text-white'}`}>
                 {formatTime(elapsed)}
             </span>
         </div>
         <div className="flex items-center gap-3 relative z-10">
             {state !== 'IDLE' && (
-                <button onClick={stopTimer} className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-500/20 transition-all active:scale-95">
+                <button onClick={stopTimer} className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center hover:bg-red-500/20 transition-all active:scale-95 border border-red-500/20">
                     <StopIcon className="h-5 w-5" />
                 </button>
             )}
             <button 
                 onClick={toggleTimer} 
-                className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all active:scale-90 shadow-lg transform ${
+                className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all active:scale-90 shadow-lg transform border border-white/10 ${
                     state === 'RUNNING' 
-                    ? 'bg-amber-400 text-white shadow-amber-400/40' 
-                    : 'bg-primary text-white shadow-primary/40'
+                    ? 'bg-amber-400 text-black shadow-amber-400/40' 
+                    : 'bg-primary text-white shadow-[0_0_20px_rgba(59,130,246,0.5)]'
                 }`}
             >
                 {state === 'RUNNING' ? <PauseIcon className="h-8 w-8" /> : <PlayIcon className="h-8 w-8 ml-1" />}
@@ -367,17 +356,17 @@ const ServiceLogView: React.FC<ServiceLogViewProps> = ({ entries, onAddOrUpdateE
     days.push(
       <div 
         key={i} 
-        className={`py-2 flex flex-col items-center justify-start min-h-[60px] cursor-pointer rounded-2xl transition-all duration-300 ${hasEntry ? 'bg-primary/5 dark:bg-white/10 scale-105 shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`} 
+        className={`py-2 flex flex-col items-center justify-start min-h-[55px] cursor-pointer rounded-2xl transition-all duration-300 ${hasEntry ? 'bg-white/10 scale-105 shadow-sm border border-white/10' : 'hover:bg-white/5'}`} 
         onClick={() => handleDateClick(dateString)}
       >
         <time 
           dateTime={dateString} 
-          className={`text-sm w-8 h-8 flex items-center justify-center rounded-full ${isToday ? 'bg-primary text-white font-bold shadow-lg shadow-primary/40' : 'text-textPrimary dark:text-darkTextPrimary'} ${hasEntry && !isToday ? 'font-bold' : ''}`}
+          className={`text-sm w-7 h-7 flex items-center justify-center rounded-full ${isToday ? 'bg-primary text-white font-bold shadow-[0_0_10px_rgba(59,130,246,0.6)]' : 'text-white'} ${hasEntry && !isToday ? 'font-bold text-primary-light' : ''}`}
         >
           {i}
         </time>
         {hasEntry && (
-            <div className="mt-1 text-[10px] font-extrabold text-primary dark:text-primary-light bg-white dark:bg-black/40 px-2 py-0.5 rounded-full shadow-sm">
+            <div className="mt-1 text-[10px] font-bold text-white bg-primary/20 border border-primary/30 px-2 py-0.5 rounded-full">
                 {entryForDay.hours % 1 === 0 ? `${entryForDay.hours}` : `${entryForDay.hours.toFixed(1)}`}
             </div>
         )}
@@ -430,53 +419,52 @@ const ServiceLogView: React.FC<ServiceLogViewProps> = ({ entries, onAddOrUpdateE
       }
   };
 
-  const weekdays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-
   return (
     <div className="px-4 py-2 animate-fade-in">
-      <div className="flex justify-between items-center mb-8 px-2">
-        <h2 className="text-3xl font-bold text-textPrimary dark:text-darkTextPrimary tracking-tight">
-          {currentDate.toLocaleString('es-ES', { month: 'long' }).replace(/^\w/, c => c.toUpperCase())} <span className="text-textSecondary dark:text-darkTextSecondary font-medium">{currentDate.getFullYear()}</span>
+      <div className="flex justify-between items-center mb-6 px-2">
+        <h2 className="text-3xl font-bold text-white tracking-tight drop-shadow-md">
+          {currentDate.toLocaleString('es-ES', { month: 'long' }).replace(/^\w/, c => c.toUpperCase())} <span className="text-textSecondary font-light">{currentDate.getFullYear()}</span>
         </h2>
-        <div className="flex bg-white dark:bg-white/5 rounded-full p-1 shadow-soft border border-gray-100 dark:border-white/5">
-            <button onClick={() => changeMonth(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary transition-colors"><ChevronLeftIcon className="h-5 w-5" /></button>
-            <button onClick={() => changeMonth(1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-textSecondary dark:text-darkTextSecondary transition-colors"><ChevronRightIcon className="h-5 w-5" /></button>
+        <div className="flex bg-white/5 rounded-full p-1 border border-white/10 backdrop-blur-md">
+            <button onClick={() => changeMonth(-1)} className="p-2 rounded-full hover:bg-white/10 text-textSecondary transition-colors"><ChevronLeftIcon className="h-5 w-5" /></button>
+            <button onClick={() => changeMonth(1)} className="p-2 rounded-full hover:bg-white/10 text-textSecondary transition-colors"><ChevronRightIcon className="h-5 w-5" /></button>
         </div>
       </div>
       
       <Stopwatch onSave={handleStopwatchSave} />
       
-      <div className="bg-white dark:bg-[#1C1C1E] shadow-soft dark:shadow-none border border-gray-100 dark:border-white/5 rounded-[2rem] p-6 mb-6 overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-        <h3 className="font-bold text-lg text-textPrimary dark:text-darkTextPrimary mb-2 text-center relative z-10">Progreso Mensual</h3>
+      {/* Progress Card - Glassmorphism */}
+      <div className="bg-black/30 backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 mb-6 overflow-hidden relative shadow-glass">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-primary/20 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+        <h3 className="font-bold text-lg text-white mb-2 text-center relative z-10">Progreso Mensual</h3>
         <div className="text-center mb-5 relative z-10">
-          <span className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-primary to-blue-600 dark:to-blue-400 tracking-tighter">{totalHoursThisMonth.toFixed(1)}</span>
-          <span className="text-xl font-semibold text-textSecondary dark:text-darkTextSecondary ml-2">hrs</span>
+          <span className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-300 tracking-tighter drop-shadow-lg">{totalHoursThisMonth.toFixed(1)}</span>
+          <span className="text-xl font-semibold text-textSecondary ml-2">hrs</span>
         </div>
-        <div className="w-full bg-gray-100 dark:bg-black/20 rounded-full h-4 mb-3 overflow-hidden shadow-inner">
-            <div className="bg-gradient-to-r from-primary to-blue-400 h-4 rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(0,122,255,0.4)]" style={{ width: `${progressPercentage}%` }}></div>
+        <div className="w-full bg-black/30 rounded-full h-4 mb-3 overflow-hidden shadow-inner border border-white/5">
+            <div className="bg-gradient-to-r from-primary to-cyan-400 h-4 rounded-full transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(6,182,212,0.6)]" style={{ width: `${progressPercentage}%` }}></div>
         </div>
-        <div className="flex justify-between text-sm font-semibold text-textSecondary dark:text-darkTextSecondary px-1">
+        <div className="flex justify-between text-sm font-semibold text-textSecondary px-1">
             <span>Meta: {monthlyGoal}h</span>
             <span>Faltan {remainingHours.toFixed(1)}h</span>
         </div>
       </div>
       
       <div className="grid grid-cols-1 gap-6 mb-6">
-        <div className="bg-white dark:bg-[#1C1C1E] shadow-soft dark:shadow-none border border-gray-100 dark:border-white/5 rounded-[2rem] p-6">
-            <h3 className="font-bold text-lg text-textPrimary dark:text-darkTextPrimary mb-6">Actividad Diaria</h3>
-            <div className="h-40 flex items-end justify-between gap-1 pb-2" role="figure" aria-label="Gráfico de horas de servicio diarias">
+        {/* Charts */}
+        <div className="bg-black/30 backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 shadow-glass">
+            <h3 className="font-bold text-lg text-white mb-6">Actividad Diaria</h3>
+            <div className="h-40 flex items-end justify-between gap-1 pb-2" role="figure" aria-label="Gráfico de horas">
             {chartData.map(item => (
                 <div key={item.day} className="flex-1 h-full flex flex-col items-center justify-end group relative">
                 <div 
-                    className="w-full max-w-[8px] bg-gray-200 dark:bg-white/10 rounded-full transition-all duration-500 ease-out group-hover:bg-primary overflow-hidden relative"
+                    className="w-full max-w-[8px] bg-white/5 rounded-full transition-all duration-500 ease-out group-hover:bg-primary overflow-hidden relative border border-white/5"
                     style={{ height: `${item.hours > 0 ? Math.max((item.hours / maxHours) * 100, 10) : 5}%` }}
                 >
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-blue-400 h-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    {item.hours > 0 && <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-blue-400 h-full"></div>}
+                    {item.hours > 0 && <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-cyan-400 h-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>}
                 </div>
                 {item.hours > 0 && (
-                    <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max px-2 py-1 bg-black/80 text-white text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-10 shadow-xl -translate-y-1 group-hover:translate-y-0">
+                    <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max px-2 py-1 bg-primary text-white text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-10 shadow-lg -translate-y-1 group-hover:translate-y-0">
                      {item.hours.toFixed(1)}h
                     </div>
                 )}
@@ -485,24 +473,25 @@ const ServiceLogView: React.FC<ServiceLogViewProps> = ({ entries, onAddOrUpdateE
             </div>
         </div>
 
-        <div className="bg-white dark:bg-[#1C1C1E] shadow-soft dark:shadow-none border border-gray-100 dark:border-white/5 rounded-[2rem] p-6">
-            <h3 className="font-bold text-lg text-textPrimary dark:text-darkTextPrimary mb-4">Esta Semana</h3>
+        {/* Weekly Stats */}
+        <div className="bg-black/30 backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 shadow-glass">
+            <h3 className="font-bold text-lg text-white mb-4">Esta Semana</h3>
             <div className="grid grid-cols-4 gap-3 text-center">
-                <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-3 flex flex-col justify-center">
-                    <p className="text-2xl font-black text-textPrimary dark:text-darkTextPrimary">{weeklyTotals.hours.toFixed(1)}</p>
-                    <p className="text-[9px] font-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider mt-1">Horas</p>
+                <div className="bg-white/5 border border-white/5 rounded-2xl p-3 flex flex-col justify-center hover:bg-white/10 transition-colors">
+                    <p className="text-2xl font-black text-white">{weeklyTotals.hours.toFixed(1)}</p>
+                    <p className="text-[9px] font-bold text-textSecondary uppercase tracking-wider mt-1">Horas</p>
                 </div>
-                <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-3 flex flex-col justify-center">
-                    <p className="text-2xl font-black text-textPrimary dark:text-darkTextPrimary">{weeklyTotals.placements}</p>
-                    <p className="text-[9px] font-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider mt-1">Pubs</p>
+                <div className="bg-white/5 border border-white/5 rounded-2xl p-3 flex flex-col justify-center hover:bg-white/10 transition-colors">
+                    <p className="text-2xl font-black text-white">{weeklyTotals.placements}</p>
+                    <p className="text-[9px] font-bold text-textSecondary uppercase tracking-wider mt-1">Pubs</p>
                 </div>
-                <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-3 flex flex-col justify-center">
-                    <p className="text-2xl font-black text-textPrimary dark:text-darkTextPrimary">{weeklyTotals.videos}</p>
-                    <p className="text-[9px] font-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider mt-1">Videos</p>
+                <div className="bg-white/5 border border-white/5 rounded-2xl p-3 flex flex-col justify-center hover:bg-white/10 transition-colors">
+                    <p className="text-2xl font-black text-white">{weeklyTotals.videos}</p>
+                    <p className="text-[9px] font-bold text-textSecondary uppercase tracking-wider mt-1">Videos</p>
                 </div>
-                <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-3 flex flex-col justify-center">
-                    <p className="text-2xl font-black text-textPrimary dark:text-darkTextPrimary">{weeklyTotals.returnVisits}</p>
-                    <p className="text-[9px] font-bold text-textSecondary dark:text-darkTextSecondary uppercase tracking-wider mt-1">Revis.</p>
+                <div className="bg-white/5 border border-white/5 rounded-2xl p-3 flex flex-col justify-center hover:bg-white/10 transition-colors">
+                    <p className="text-2xl font-black text-white">{weeklyTotals.returnVisits}</p>
+                    <p className="text-[9px] font-bold text-textSecondary uppercase tracking-wider mt-1">Revis.</p>
                 </div>
             </div>
         </div>
@@ -519,7 +508,7 @@ const ServiceLogView: React.FC<ServiceLogViewProps> = ({ entries, onAddOrUpdateE
       
       <button 
         onClick={handleAddClick} 
-        className="fixed bottom-28 right-6 bg-primary text-white rounded-[1.2rem] p-4 shadow-lg shadow-primary/40 z-20 transform transition-all duration-300 hover:scale-110 hover:shadow-primary/60 hover:-translate-y-1 active:scale-90 active:translate-y-0"
+        className="fixed bottom-24 right-6 bg-gradient-to-r from-primary to-blue-600 text-white rounded-[1.2rem] p-4 shadow-[0_0_20px_rgba(59,130,246,0.6)] z-40 transform transition-all duration-300 hover:scale-110 hover:-translate-y-1 active:scale-90 border border-white/20"
         aria-label="Añadir entrada"
       >
         <PlusIcon className="h-7 w-7" />
