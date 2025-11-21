@@ -1,404 +1,326 @@
-import React, { useState, useEffect, useMemo } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { SchoolAssignment, MeetingDuty } from '../types';
-import { PlusIcon, TrashIcon, PencilIcon, BellIcon } from './icons';
+import { PlusIcon, TrashIcon, PencilIcon, BellIcon, SparklesIcon, CheckIcon, BookOpenIcon, UsersIcon } from './icons';
 
 type Item = SchoolAssignment | MeetingDuty;
-type ItemWithoutId = Omit<SchoolAssignment, 'id'> | Omit<MeetingDuty, 'id'>;
+type ItemType = 'school' | 'duty';
 
-interface AssignmentFormModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (item: ItemWithoutId | Item) => void;
-  onDelete: (id: string) => void;
-  initialData?: Item | null;
-  type: 'school' | 'duty';
+interface MeetingsViewProps {
+  schoolAssignments: SchoolAssignment[];
+  meetingDuties: MeetingDuty[];
+  onAddSchool: (item: Omit<SchoolAssignment, 'id'>) => void;
+  onUpdateSchool: (item: SchoolAssignment) => void;
+  onDeleteSchool: (id: string) => void;
+  onAddDuty: (item: Omit<MeetingDuty, 'id'>) => void;
+  onUpdateDuty: (item: MeetingDuty) => void;
+  onDeleteDuty: (id: string) => void;
+  onOpenAssistant: () => void;
 }
 
-const AssignmentFormModal: React.FC<AssignmentFormModalProps> = ({ isOpen, onClose, onSubmit, onDelete, initialData, type }) => {
+const MeetingsFormModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: any, type: ItemType) => void;
+  onDelete: () => void;
+  initialData?: Item | null;
+  initialType?: ItemType;
+}> = ({ isOpen, onClose, onSubmit, onDelete, initialData, initialType = 'school' }) => {
+  const [type, setType] = useState<ItemType>(initialType);
   const [date, setDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [field1, setField1] = useState('');
-  const [field2, setField2] = useState('');
+  const [field1, setField1] = useState(''); // Student or Person
+  const [field2, setField2] = useState(''); // Assignment or Duty
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderDateTime, setReminderDateTime] = useState('');
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
-  const [validationError, setValidationError] = useState<string>('');
 
-  const getDefaultReminderTime = (dateStr: string) => {
-    const d = dateStr ? new Date(dateStr + 'T00:00:00') : new Date();
-    d.setHours(19);
-    d.setMinutes(0);
-    const year = d.getFullYear();
-    const month = (d.getMonth() + 1).toString().padStart(2, '0');
-    const day = d.getDate().toString().padStart(2, '0');
-    const hours = d.getHours().toString().padStart(2, '0');
-    const minutes = d.getMinutes().toString().padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
-
-  useEffect(() => {
+  React.useEffect(() => {
     if (isOpen) {
       if (initialData) {
+        const isSchool = 'student' in initialData;
+        setType(isSchool ? 'school' : 'duty');
         setDate(initialData.date);
         setEndDate(initialData.endDate || '');
-        if (type === 'school') {
-          setField1((initialData as SchoolAssignment).student);
-          setField2((initialData as SchoolAssignment).assignment);
-        } else {
-          setField1((initialData as MeetingDuty).person);
-          setField2((initialData as MeetingDuty).duty);
-        }
+        setField1(isSchool ? (initialData as SchoolAssignment).student : (initialData as MeetingDuty).person);
+        setField2(isSchool ? (initialData as SchoolAssignment).assignment : (initialData as MeetingDuty).duty);
         setReminderEnabled(!!initialData.reminder);
-        setReminderDateTime(initialData.reminder || getDefaultReminderTime(initialData.date));
+        setReminderDateTime(initialData.reminder || '');
       } else {
+        setType(initialType);
         const today = new Date().toISOString().split('T')[0];
         setDate(today);
         setEndDate('');
         setField1('');
         setField2('');
         setReminderEnabled(false);
-        setReminderDateTime(getDefaultReminderTime(today));
+        setReminderDateTime('');
       }
-      setNotificationMessage(null);
-      setValidationError('');
     }
-  }, [initialData, isOpen, type]);
+  }, [isOpen, initialData, initialType]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setValidationError('');
-
-    if (reminderEnabled) {
-      if (!reminderDateTime) {
-        setValidationError('Por favor, selecciona una fecha y hora válidas.');
-        return;
-      }
-      const reminderDate = new Date(reminderDateTime);
-      const now = new Date();
-      if (reminderDate <= now) {
-        setValidationError('La fecha del recordatorio debe ser futura.');
-        return;
-      }
-    }
-
-    if (date && field1 && field2) {
-      const baseData = {
-        ...(initialData || {}),
-        id: initialData?.id,
-        date,
-        endDate: endDate || undefined,
-        reminder: reminderEnabled ? reminderDateTime : undefined,
-      };
-
-      let submittedData: ItemWithoutId | Item;
-      if (type === 'school') {
-        submittedData = { ...baseData, student: field1, assignment: field2 };
-      } else {
-        submittedData = { ...baseData, person: field1, duty: field2 };
-      }
-      onSubmit(submittedData);
-      onClose();
-    }
-  };
-
-  const handleDelete = () => {
-    setIsConfirmOpen(true);
-  };
-  
-  const handleConfirmDelete = () => {
-    if (initialData) {
-      onDelete(initialData.id);
-      onClose();
-    }
+    const data = {
+      id: initialData?.id,
+      date,
+      endDate: endDate || undefined,
+      reminder: reminderEnabled ? reminderDateTime : undefined,
+      ...(type === 'school' ? { student: field1, assignment: field2 } : { person: field1, duty: field2 })
+    };
+    onSubmit(data, type);
+    onClose();
   };
 
   const handleReminderChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const isEnabled = e.target.checked;
-    setNotificationMessage(null);
-
-    if (!isEnabled) {
-      setReminderEnabled(false);
-      return;
-    }
-
-    if (!('Notification' in window)) {
-      setNotificationMessage('Este navegador no soporta notificaciones.');
-      e.target.checked = false;
-      return;
-    }
-
-    let permission = Notification.permission;
-    if (permission === 'default') {
-      permission = await Notification.requestPermission();
-    }
-
-    if (permission === 'granted') {
-      setReminderEnabled(true);
+    if (isEnabled) {
+        if (!('Notification' in window)) {
+            setNotificationMessage('Navegador no soporta notificaciones.');
+            return;
+        }
+        if (Notification.permission === 'default') {
+            await Notification.requestPermission();
+        }
+        if (Notification.permission === 'granted') {
+            setReminderEnabled(true);
+             if (!reminderDateTime) {
+                const d = new Date(date + 'T19:00:00');
+                setReminderDateTime(d.toISOString().slice(0, 16));
+            }
+        } else {
+            setReminderEnabled(false);
+            setNotificationMessage('Permiso denegado.');
+        }
     } else {
-      setReminderEnabled(false);
-      setNotificationMessage('Permiso denegado para notificaciones.');
-      e.target.checked = false;
+        setReminderEnabled(false);
     }
   };
 
-  const title = initialData ? 'Editar' : 'Añadir';
-  const typeTitle = type === 'school' ? 'Asignación' : 'Deber';
-  const field1Label = type === 'school' ? 'Estudiante' : 'Asignado';
-  const field2Label = type === 'school' ? 'Asignación' : 'Deber';
-
   return (
-     <div className={`fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-end z-50 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={!isConfirmOpen ? onClose : undefined}>
-      <div className={`bg-[#1E293B] border-t border-white/10 p-6 pb-10 rounded-t-[2rem] shadow-2xl w-full max-w-[480px] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
-         <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-8"></div>
-        <h2 className="text-2xl font-bold mb-6 text-white px-1 tracking-tight">{`${title} ${typeTitle}`}</h2>
+    <div className={`fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-end z-50 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={!isConfirmOpen ? onClose : undefined}>
+      <div className={`bg-[#1E293B] border-t border-white/10 p-6 pb-10 rounded-t-[2rem] shadow-2xl w-full max-w-[480px] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'} max-h-[90vh] overflow-y-auto`} onClick={e => e.stopPropagation()}>
+        <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6"></div>
+        
+        <div className="flex gap-4 mb-6">
+            <button 
+                type="button" 
+                onClick={() => !initialData && setType('school')}
+                className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all border ${type === 'school' ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-white/5 text-textSecondary border-transparent'}`}
+            >
+                Vida y Ministerio
+            </button>
+            <button 
+                type="button"
+                onClick={() => !initialData && setType('duty')} 
+                className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all border ${type === 'duty' ? 'bg-purple-500/20 text-purple-400 border-purple-500/50' : 'bg-white/5 text-textSecondary border-transparent'}`}
+            >
+                Deberes
+            </button>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1">Fecha Inicio</label>
+                <input type="date" value={date} onChange={e => setDate(e.target.value)} required className="appearance-none border-none bg-white/5 rounded-2xl w-full py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 font-medium" />
+              </div>
+              <div>
+                <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1">Fecha Fin (Opc)</label>
+                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} min={date} className="appearance-none border-none bg-white/5 rounded-2xl w-full py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 font-medium" />
+              </div>
+          </div>
+
           <div>
-            <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="date">Fecha de inicio</label>
-            <input type="date" id="date" value={date} onChange={e => setDate(e.target.value)} required className="appearance-none border-none bg-white/5 rounded-2xl w-full py-4 px-5 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium" />
+            <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1">{type === 'school' ? 'Estudiante' : 'Asignado'}</label>
+            <input type="text" value={field1} onChange={e => setField1(e.target.value)} required className="appearance-none border border-white/10 rounded-2xl w-full py-4 px-5 text-white bg-black/20 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Nombre..." />
           </div>
-           <div>
-            <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="endDate">Fecha de finalización (Opcional)</label>
-            <input type="date" id="endDate" value={endDate} onChange={e => setEndDate(e.target.value)} min={date} className="appearance-none border-none bg-white/5 rounded-2xl w-full py-4 px-5 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium" />
-          </div>
+          
           <div>
-            <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="field1">{field1Label}</label>
-            <input id="field1" type="text" value={field1} onChange={e => setField1(e.target.value)} required className="appearance-none border border-white/10 rounded-2xl w-full py-4 px-5 text-white bg-black/20 leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-inner" />
+            <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1">{type === 'school' ? 'Asignación' : 'Deber'}</label>
+            <input type="text" value={field2} onChange={e => setField2(e.target.value)} required className="appearance-none border border-white/10 rounded-2xl w-full py-4 px-5 text-white bg-black/20 leading-tight focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Descripción..." />
           </div>
-          <div>
-            <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="field2">{field2Label}</label>
-            <input id="field2" type="text" value={field2} onChange={e => setField2(e.target.value)} required className="appearance-none border border-white/10 rounded-2xl w-full py-4 px-5 text-white bg-black/20 leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-inner" />
-          </div>
+
           <div className="pt-2 space-y-3">
-            <label className="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-transparent hover:border-white/10">
-              <input type="checkbox" checked={reminderEnabled} onChange={handleReminderChange} className="form-checkbox h-5 w-5 text-primary rounded-lg focus:ring-primary border-gray-600 bg-black/40" />
-              <span className="text-sm font-medium text-white">Activar recordatorio</span>
+            <label className="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5">
+              <input type="checkbox" checked={reminderEnabled} onChange={handleReminderChange} className="h-5 w-5 text-primary rounded bg-black/40 border-gray-600 focus:ring-primary" />
+              <span className="text-sm font-medium text-white">Recordatorio</span>
             </label>
-            {notificationMessage && (
-                <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-2xl">
-                    <p className="text-sm text-amber-400 font-medium">{notificationMessage}</p>
-                </div>
-            )}
           </div>
+          
           {reminderEnabled && (
-            <div className="animate-[fade-in_0.2s_ease-out]">
-              <label className="block text-textSecondary text-xs font-bold uppercase tracking-wider mb-2 ml-1" htmlFor="reminder-time">Fecha y hora</label>
-              <input type="datetime-local" id="reminder-time" value={reminderDateTime} onChange={e => setReminderDateTime(e.target.value)} className="appearance-none border border-white/10 rounded-2xl w-full py-4 px-5 text-white bg-black/20 leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all shadow-inner" />
-              {validationError && <p className="text-sm text-red-400 mt-2 font-medium px-1">{validationError}</p>}
-            </div>
+             <div className="animate-fade-in">
+                <input type="datetime-local" value={reminderDateTime} onChange={e => setReminderDateTime(e.target.value)} className="w-full bg-black/20 border border-white/10 text-white rounded-2xl py-3 px-4 focus:ring-primary focus:border-primary" />
+             </div>
           )}
+          
            <div className="flex items-center gap-3 pt-6">
              {initialData && (
-                <button type="button" onClick={handleDelete} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold p-4 rounded-2xl transition-all active:scale-95 flex-shrink-0 border border-red-500/20" aria-label="Eliminar">
+                <button type="button" onClick={() => setIsConfirmOpen(true)} className="bg-red-500/10 text-red-400 p-4 rounded-2xl border border-red-500/20">
                   <TrashIcon className="h-6 w-6" />
                 </button>
              )}
             <div className="flex-grow"></div>
-            <button type="button" onClick={onClose} className="bg-white/5 hover:bg-white/10 text-white font-bold py-4 px-6 rounded-2xl transition-all active:scale-95 border border-white/5">Cancelar</button>
-            <button type="submit" className="bg-gradient-to-r from-primary to-blue-600 text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-primary/30 transform transition-all active:scale-95">Guardar</button>
+            <button type="button" onClick={onClose} className="bg-white/5 text-white font-bold py-4 px-6 rounded-2xl border border-white/5">Cancelar</button>
+            <button type="submit" className="bg-primary text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-primary/30">Guardar</button>
           </div>
         </form>
       </div>
 
       {isConfirmOpen && (
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex justify-center items-center z-[60]" onClick={() => setIsConfirmOpen(false)}>
-            <div className="bg-[#1E293B] p-8 rounded-3xl shadow-2xl w-full max-w-xs m-4 border border-white/10" onClick={e => e.stopPropagation()}>
-                <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500 shadow-glow">
-                   <TrashIcon className="h-8 w-8" />
-                </div>
-                <h2 className="text-xl font-bold text-center mb-2 text-white">¿Eliminar elemento?</h2>
-                <p className="text-center text-textSecondary mb-8 leading-relaxed text-sm">Esta acción no se puede deshacer.</p>
+         <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex justify-center items-center z-[60]" onClick={() => setIsConfirmOpen(false)}>
+            <div className="bg-[#1E293B] p-8 rounded-3xl border border-white/10 m-4 max-w-xs w-full text-center" onClick={e => e.stopPropagation()}>
+                <h2 className="text-xl font-bold text-white mb-4">¿Eliminar?</h2>
                 <div className="flex flex-col gap-3">
-                    <button onClick={handleConfirmDelete} className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-5 rounded-2xl shadow-lg shadow-red-500/30 active:scale-95">Sí, eliminar</button>
-                    <button onClick={() => setIsConfirmOpen(false)} className="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-4 px-5 rounded-2xl active:scale-95">Cancelar</button>
+                    <button onClick={() => { onDelete(); onClose(); }} className="bg-red-500 text-white font-bold py-3 rounded-xl">Sí, eliminar</button>
+                    <button onClick={() => setIsConfirmOpen(false)} className="bg-white/10 text-white font-bold py-3 rounded-xl">Cancelar</button>
                 </div>
             </div>
-        </div>
+         </div>
       )}
     </div>
   );
 };
 
-type BaseProps = {
-  onDeleteItem: (id: string) => void;
-};
-
-type SchoolProps = BaseProps & {
-  items: SchoolAssignment[];
-  type: 'school';
-  onAddItem: (item: Omit<SchoolAssignment, 'id'>) => void;
-  onUpdateItem: (item: SchoolAssignment) => void;
-};
-
-type DutyProps = BaseProps & {
-  items: MeetingDuty[];
-  type: 'duty';
-  onAddItem: (item: Omit<MeetingDuty, 'id'>) => void;
-  onUpdateItem: (item: MeetingDuty) => void;
-};
-
-type AssignmentListProps = SchoolProps | DutyProps;
-
-const AssignmentList: React.FC<AssignmentListProps> = (props) => {
-  const { items, type, onDeleteItem } = props;
+const MeetingsView: React.FC<MeetingsViewProps> = ({ schoolAssignments, meetingDuties, onAddSchool, onUpdateSchool, onDeleteSchool, onAddDuty, onUpdateDuty, onDeleteDuty, onOpenAssistant }) => {
+  const [filter, setFilter] = useState<'ALL' | 'SCHOOL' | 'DUTY'>('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
+
+  const allItems = useMemo(() => {
+    const school = schoolAssignments.map(i => ({ ...i, type: 'school' as const }));
+    const duties = meetingDuties.map(i => ({ ...i, type: 'duty' as const }));
+    return [...school, ...duties].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [schoolAssignments, meetingDuties]);
+
+  const filteredItems = useMemo(() => {
+    if (filter === 'SCHOOL') return allItems.filter(i => i.type === 'school');
+    if (filter === 'DUTY') return allItems.filter(i => i.type === 'duty');
+    return allItems;
+  }, [allItems, filter]);
+
+  const { pending, completed } = useMemo(() => {
+    return {
+        pending: filteredItems.filter(i => !i.completed),
+        completed: filteredItems.filter(i => i.completed)
+    };
+  }, [filteredItems]);
 
   const handleEdit = (item: Item) => {
     setEditingItem(item);
     setIsModalOpen(true);
   };
-  
-  const handleAdd = () => {
-    setEditingItem(null);
-    setIsModalOpen(true);
-  };
-  
-  const handleToggleComplete = (item: Item) => {
-      const updatedItem = { ...item, completed: !item.completed };
-      if (props.type === 'school' && 'student' in updatedItem) {
-        props.onUpdateItem(updatedItem);
-      } else if (props.type === 'duty' && 'person' in updatedItem) {
-        props.onUpdateItem(updatedItem);
-      }
-  };
 
-  const handleSubmit = (itemData: ItemWithoutId | Item) => {
-    if (props.type === 'school' && 'student' in itemData) {
-      if ('id' in itemData && itemData.id) {
-        props.onUpdateItem(itemData);
-      } else {
-        props.onAddItem(itemData);
-      }
-    } else if (props.type === 'duty' && 'person' in itemData) {
-      if ('id' in itemData && itemData.id) {
-        props.onUpdateItem(itemData);
-      } else {
-        props.onAddItem(itemData);
-      }
+  const handleSubmit = (data: any, type: ItemType) => {
+    if (type === 'school') {
+      data.id ? onUpdateSchool(data) : onAddSchool(data);
+    } else {
+      data.id ? onUpdateDuty(data) : onAddDuty(data);
     }
   };
-  
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString + 'T00:00:00');
-    return date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  const toggleComplete = (item: any) => {
+    const updated = { ...item, completed: !item.completed };
+    // Remove the temporary 'type' property before saving
+    const { type, ...cleanItem } = updated; 
+    if (item.type === 'school') onUpdateSchool(cleanItem);
+    else onUpdateDuty(cleanItem);
   };
-  
-  const { pendingItems, completedItems } = useMemo(() => {
-    const pending = items.filter(item => !item.completed);
-    const completed = items.filter(item => item.completed);
 
-    pending.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    completed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
-    return { pendingItems: pending, completedItems: completed };
-  }, [items]);
-
-  const groupedPendingItems = useMemo(() => {
-    return pendingItems.reduce((acc, item) => {
-      const dateKey = formatDate(item.date);
-      if (!acc[dateKey]) {
-        acc[dateKey] = [];
-      }
-      acc[dateKey].push(item);
-      return acc;
-    }, {} as Record<string, Item[]>);
-  }, [pendingItems]);
-
-  const renderItem = (item: Item) => {
-    const isSchool = 'student' in item;
-    const mainText = isSchool ? item.assignment : item.duty;
-    const subText = isSchool ? item.student : item.person;
-    const textStyle = item.completed ? 'line-through opacity-50' : '';
-    
+  const renderItem = (item: any) => {
+    const isSchool = item.type === 'school';
     return (
-      <div 
-        key={item.id}
-        className={`bg-black/30 backdrop-blur-md rounded-2xl p-4 flex items-center justify-between transition-all duration-300 border border-white/10 hover:bg-white/5 ${item.completed ? 'opacity-60' : 'shadow-glass'}`}
-      >
-        <div className="flex items-center space-x-4 flex-grow min-w-0">
-            <div className="relative flex items-center justify-center">
-              <input
-                  type="checkbox"
-                  checked={!!item.completed}
-                  onChange={() => handleToggleComplete(item)}
-                  className="h-6 w-6 rounded-lg text-primary focus:ring-primary border-gray-600 bg-black/40 flex-shrink-0 cursor-pointer transition-all"
-                  aria-label={`Marcar como completada`}
-              />
-            </div>
-            <div className="flex-grow min-w-0">
-              <p className={`font-bold text-white truncate text-lg ${textStyle}`}>{mainText}</p>
-              <p className={`text-sm text-textSecondary truncate ${textStyle}`}>{subText}</p>
-              {item.endDate && item.endDate !== item.date && (
-                <p className="text-[10px] font-bold text-textSecondary mt-1.5 bg-white/5 w-fit px-2 py-1 rounded-md uppercase tracking-wider border border-white/5">
-                    Finaliza: {new Date(item.endDate + 'T00:00:00').toLocaleDateString('es-ES', { 
-                        month: 'short', 
-                        day: 'numeric',
-                        ...(new Date(item.date).getFullYear() !== new Date(item.endDate).getFullYear() && { year: 'numeric' })
-                    })}
-                </p>
-              )}
-            </div>
-        </div>
-        <div className="flex items-center space-x-2 flex-shrink-0 pl-2">
-           {item.reminder && <BellIcon className="h-5 w-5 text-accent-cyan drop-shadow-sm" />}
-          <button onClick={() => handleEdit(item)} className="w-10 h-10 rounded-full bg-white/5 hover:bg-primary hover:text-white text-textSecondary flex items-center justify-center transition-colors border border-white/5">
-            <PencilIcon className="h-4 w-4" />
+       <div key={item.id} className={`bg-black/30 backdrop-blur-md rounded-2xl p-4 border border-white/5 hover:bg-white/5 transition-all mb-3 flex items-center gap-4 ${item.completed ? 'opacity-50' : 'shadow-glass'}`}>
+          <button onClick={() => toggleComplete(item)} className={`h-6 w-6 rounded-lg border-2 flex items-center justify-center transition-all ${item.completed ? 'bg-primary border-primary text-white' : 'border-gray-500 bg-black/20'}`}>
+              {item.completed && <CheckIcon className="h-4 w-4" />}
           </button>
-        </div>
-      </div>
-    )
-  }
-  
-  return (
-    <div className="px-4 py-2 space-y-8 animate-fade-in pb-32">
-      {pendingItems.length === 0 && completedItems.length === 0 ? (
-        <div className="flex flex-col items-center justify-center text-center text-textSecondary py-24 px-4 opacity-60">
-             <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4 border border-white/5">
-                 <PlusIcon className="h-8 w-8 opacity-50" />
+          <div className="flex-grow min-w-0" onClick={() => handleEdit(item)}>
+             <div className="flex items-center gap-2 mb-1">
+                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${isSchool ? 'bg-blue-500/20 text-blue-300' : 'bg-purple-500/20 text-purple-300'}`}>
+                     {isSchool ? 'Escuela' : 'Deber'}
+                 </span>
+                 <span className="text-xs text-textSecondary">{new Date(item.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
              </div>
-            <p className="text-lg font-medium">No hay {type === 'school' ? 'asignaciones' : 'deberes'} todavía.</p>
+             <h4 className={`font-bold text-white truncate ${item.completed ? 'line-through' : ''}`}>{isSchool ? item.assignment : item.duty}</h4>
+             <p className="text-sm text-textSecondary truncate">{isSchool ? item.student : item.person}</p>
+          </div>
+          <div className="flex flex-col gap-2">
+             {item.reminder && <BellIcon className="h-4 w-4 text-accent-cyan" />}
+             <button onClick={() => handleEdit(item)} className="p-2 rounded-full bg-white/5 text-textSecondary hover:text-white"><PencilIcon className="h-4 w-4" /></button>
+          </div>
+       </div>
+    );
+  };
+
+  return (
+    <div className="px-4 py-4 pb-32 animate-fade-in min-h-full flex flex-col">
+        <div className="flex items-center justify-between mb-6">
+            <h2 className="text-3xl font-bold text-white tracking-tight">Reuniones</h2>
+            <div className="flex bg-white/5 rounded-xl p-1 border border-white/5">
+                <button onClick={() => setFilter('ALL')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'ALL' ? 'bg-white/10 text-white' : 'text-textSecondary'}`}>Todo</button>
+                <button onClick={() => setFilter('SCHOOL')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'SCHOOL' ? 'bg-blue-500/20 text-blue-300' : 'text-textSecondary'}`}>V. y M.</button>
+                <button onClick={() => setFilter('DUTY')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'DUTY' ? 'bg-purple-500/20 text-purple-300' : 'text-textSecondary'}`}>Deberes</button>
+            </div>
         </div>
-      ) : (
-        <>
-            {Object.entries(groupedPendingItems).map(([date, itemsForDate]) => (
-              <div key={date}>
-                <h3 className="text-xs font-bold text-textSecondary tracking-widest uppercase pb-4 px-2 opacity-70">{date}</h3>
-                <div className="space-y-3">
-                  {(itemsForDate as Item[]).map(item => renderItem(item))}
+
+        <div className="flex-grow">
+            {pending.length === 0 && completed.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 text-center opacity-50">
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4"><BookOpenIcon className="h-8 w-8 opacity-50" /></div>
+                    <p className="text-textSecondary">No tienes asignaciones pendientes.</p>
                 </div>
-              </div>
-            ))}
-            
-            {completedItems.length > 0 && (
-                <div className="pt-8">
-                    <h3 className="text-xs font-bold text-textSecondary tracking-widest uppercase pb-4 px-2 border-t border-white/5 pt-8 opacity-70">Completadas</h3>
-                    <div className="space-y-3">
-                        {completedItems.map(item => renderItem(item))}
+            ) : (
+                <>
+                   {pending.map(renderItem)}
+                   {completed.length > 0 && (
+                       <div className="mt-8">
+                           <h3 className="text-xs font-bold text-textSecondary uppercase tracking-widest mb-4 px-2 opacity-60">Completadas</h3>
+                           {completed.map(renderItem)}
+                       </div>
+                   )}
+                </>
+            )}
+        </div>
+        
+        {/* AI Assistant Button */}
+        <div className="mt-6 mb-20">
+            <button 
+                onClick={onOpenAssistant}
+                className="w-full bg-gradient-to-r from-[#2C2C3E] to-[#1F1F2E] border border-white/10 rounded-2xl p-4 flex items-center justify-between group hover:border-primary/30 transition-all shadow-lg"
+            >
+                <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                        <SparklesIcon className="h-5 w-5" />
+                    </div>
+                    <div className="text-left">
+                        <h4 className="font-bold text-white">Preparar con IA</h4>
+                        <p className="text-xs text-textSecondary">Investiga tu asignación</p>
                     </div>
                 </div>
-            )}
-        </>
-      )}
+                <div className="bg-white/5 p-2 rounded-full group-hover:bg-primary group-hover:text-white transition-colors">
+                    <UsersIcon className="h-5 w-5" />
+                </div>
+            </button>
+        </div>
 
-      <AssignmentFormModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleSubmit}
-        onDelete={onDeleteItem}
-        initialData={editingItem}
-        type={type}
-      />
+        <button 
+            onClick={() => { setEditingItem(null); setIsModalOpen(true); }} 
+            className="fixed bottom-24 right-6 bg-gradient-to-r from-primary to-blue-600 text-white rounded-[1.2rem] p-4 shadow-[0_0_20px_rgba(59,130,246,0.6)] z-40 transition-transform active:scale-90 hover:scale-110 border border-white/20"
+        >
+            <PlusIcon className="h-7 w-7" />
+        </button>
 
-      <button 
-        onClick={handleAdd} 
-        className="fixed bottom-24 right-6 bg-gradient-to-r from-primary to-blue-600 text-white rounded-[1.2rem] p-4 shadow-[0_0_20px_rgba(59,130,246,0.6)] z-40 transform transition-all duration-300 hover:scale-110 hover:-translate-y-1 active:scale-90 border border-white/20"
-        aria-label="Añadir nuevo"
-      >
-        <PlusIcon className="h-7 w-7" />
-      </button>
+        <MeetingsFormModal 
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSubmit={handleSubmit}
+            onDelete={() => { if(editingItem) { editingItem.type === 'school' ? onDeleteSchool(editingItem.id) : onDeleteDuty(editingItem.id) } }}
+            initialData={editingItem}
+            initialType={filter === 'DUTY' ? 'duty' : 'school'}
+        />
     </div>
   );
 };
 
-export default AssignmentList;
+export default MeetingsView;

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { View, MinistryActivity, SchoolAssignment, MeetingDuty, ServiceEntry } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
@@ -5,7 +6,7 @@ import { useReminders } from './hooks/useReminders';
 import Header from './components/Header';
 import BottomNav from './components/BottomNav';
 import CalendarView from './components/CalendarView';
-import AssignmentList from './components/AssignmentList';
+import MeetingsView from './components/AssignmentList'; // Re-using file but with new Component
 import ServiceLogView from './components/ServiceLogView';
 import SettingsView from './components/SettingsView';
 import AssistantModal from './components/AssistantModal';
@@ -36,8 +37,7 @@ const App: React.FC = () => {
 
   const viewTitles: Record<View, string> = {
     [View.CALENDAR]: 'Calendario',
-    [View.SCHOOL]: 'Vida y Ministerio',
-    [View.DUTIES]: 'Deberes',
+    [View.MEETINGS]: 'Reuniones',
     [View.SERVICE_LOG]: 'Registro',
     [View.SETTINGS]: 'Ajustes',
   };
@@ -155,21 +155,17 @@ const App: React.FC = () => {
                   onUpdateActivity={updateMinistryActivity}
                   onDeleteActivity={deleteMinistryActivity}
                />;
-      case View.SCHOOL:
-        return <AssignmentList 
-                  items={schoolAssignments}
-                  type="school"
-                  onAddItem={addSchoolAssignment}
-                  onUpdateItem={updateSchoolAssignment}
-                  onDeleteItem={deleteSchoolAssignment}
-                />;
-      case View.DUTIES:
-        return <AssignmentList
-                  items={meetingDuties}
-                  type="duty"
-                  onAddItem={addMeetingDuty}
-                  onUpdateItem={updateMeetingDuty}
-                  onDeleteItem={deleteMeetingDuty}
+      case View.MEETINGS:
+        return <MeetingsView 
+                  schoolAssignments={schoolAssignments}
+                  meetingDuties={meetingDuties}
+                  onAddSchool={addSchoolAssignment}
+                  onUpdateSchool={updateSchoolAssignment}
+                  onDeleteSchool={deleteSchoolAssignment}
+                  onAddDuty={addMeetingDuty}
+                  onUpdateDuty={updateMeetingDuty}
+                  onDeleteDuty={deleteMeetingDuty}
+                  onOpenAssistant={() => setIsAssistantOpen(true)}
                 />;
       case View.SERVICE_LOG:
         return <ServiceLogView

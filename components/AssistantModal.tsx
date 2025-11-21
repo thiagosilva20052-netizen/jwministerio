@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { XIcon, PaperAirplaneIcon } from './icons';
 import { GoogleGenAI } from "@google/genai";
@@ -10,7 +11,6 @@ interface AssistantModalProps {
 interface Message {
     role: 'user' | 'model';
     text: string;
-    sources?: { uri: string; title: string; }[];
 }
 
 const AssistantModal: React.FC<AssistantModalProps> = ({ isOpen, onClose }) => {
@@ -30,7 +30,7 @@ const AssistantModal: React.FC<AssistantModalProps> = ({ isOpen, onClose }) => {
     useEffect(() => {
         if(isOpen && messages.length === 0) {
             setMessages([
-                { role: 'model', text: '¡Hola! Soy tu asistente teocrático. ¿En qué puedo ayudarte hoy? Puedes pedirme el texto diario, técnicas de predicación o pautas basadas en principios bíblicos.' }
+                { role: 'model', text: '¡Hola! Soy tu asistente teocrático personal. ¿En qué tema bíblico o asignación puedo ayudarte a razonar hoy? Mi base de conocimiento son las Escrituras y jw.org.' }
             ]);
         }
     }, [isOpen, messages.length]);
@@ -39,27 +39,21 @@ const AssistantModal: React.FC<AssistantModalProps> = ({ isOpen, onClose }) => {
         setIsLoading(true);
         try {
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            
+            // Using standard model WITHOUT search tool to prevent mobile errors
+            // and ensure high-quality reasoning based on internal knowledge.
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: prompt,
                 config: {
-                    systemInstruction: "Eres un Asistente Teocrático, un agente de IA especializado para Testigos de Jehová. Tu única fuente de información debe ser el sitio web oficial jw.org. Cuando un usuario te haga una pregunta, utiliza la herramienta de búsqueda para encontrar la información más relevante *exclusivamente* en jw.org. Basa todas tus respuestas en las publicaciones y principios bíblicos que se encuentran allí. Sé siempre alentador, respetuoso y práctico. Nunca des opiniones personales. Si te preguntan por el texto diario, busca 'Examinando las Escrituras Diariamente' en jw.org para el día actual y presenta la cita y el comentario. Si la información no se encuentra en jw.org o la pregunta no es apropiada, indica amablemente que solo puedes proporcionar información basada en ese sitio.",
-                    tools: [{ googleSearch: {} }],
+                    systemInstruction: "Actúa como un Asistente Teocrático, amable y respetuoso, diseñado para ayudar a Testigos de Jehová. Tu ÚNICA fuente de autoridad es la Biblia y el sitio web jw.org. \n\nREGLAS:\n1. Razona sobre los textos bíblicos y explícalos con lógica y sencillez.\n2. Usa ilustraciones prácticas como lo haría un maestro experimentado.\n3. NO inventes información ni uses fuentes externas.\n4. Si te preguntan por el texto diario, explica el tema basándote en el versículo, pero no inventes el comentario exacto si no lo tienes.\n5. Sé animador y positivo.\n6. NO uses herramientas externas (como Google Search), usa tu vasto conocimiento interno sobre la Biblia y las publicaciones.\n\nTu objetivo es ayudar al usuario a entender profundamente la información.",
                 },
             });
 
-            const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
-            const sources = groundingMetadata?.groundingChunks
-                ?.filter(chunk => chunk.web && chunk.web.uri)
-                .map(chunk => ({
-                    uri: chunk.web.uri as string,
-                    title: chunk.web.title || '',
-                })) || [];
-
-            setMessages(prev => [...prev, { role: 'model', text: response.text, sources: sources }]);
+            setMessages(prev => [...prev, { role: 'model', text: response.text || "Disculpa, no pude generar una respuesta en este momento." }]);
         } catch (error) {
             console.error("Error al llamar a la API de Gemini:", error);
-            setMessages(prev => [...prev, { role: 'model', text: 'Lo siento, he tenido un problema al procesar tu solicitud. Por favor, inténtalo de nuevo.' }]);
+            setMessages(prev => [...prev, { role: 'model', text: 'Lo siento, hubo un error de conexión. Por favor, verifica tu internet o inténtalo de nuevo.' }]);
         } finally {
             setIsLoading(false);
         }
@@ -82,9 +76,9 @@ const AssistantModal: React.FC<AssistantModalProps> = ({ isOpen, onClose }) => {
     };
 
     const suggestions = [
-        "Texto Diario de Hoy",
-        "Técnica de predicación",
-        "Cómo iniciar una conversación",
+        "Ayúdame con una introducción para predicar",
+        "Explícame la parábola del hijo pródigo",
+        "¿Cómo mostrar empatía en el ministerio?",
     ];
 
     return (
@@ -113,23 +107,6 @@ const AssistantModal: React.FC<AssistantModalProps> = ({ isOpen, onClose }) => {
                                     <div className={`p-4 rounded-2xl shadow-sm whitespace-pre-wrap leading-relaxed ${msg.role === 'user' ? 'bg-primary text-white rounded-br-none' : 'bg-white dark:bg-white/5 text-textPrimary dark:text-darkTextPrimary rounded-bl-none border border-gray-100 dark:border-white/5'}`}>
                                         {msg.text}
                                     </div>
-                                    {msg.sources && msg.sources.length > 0 && (
-                                        <div className="w-full mt-2 px-3 py-2 text-xs text-textSecondary dark:text-darkTextSecondary rounded-xl bg-gray-50 dark:bg-black/20 border border-separator dark:border-darkSeparator/50">
-                                            <h4 className="font-bold mb-2 text-textPrimary dark:text-darkTextPrimary">Fuentes Relevantes</h4>
-                                            <ul className="space-y-2">
-                                                {msg.sources.map((source, i) => (
-                                                    <li key={i}>
-                                                         <a href={source.uri} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-start gap-1.5">
-                                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 opacity-70" viewBox="0 0 20 20" fill="currentColor">
-                                                               <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l-1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
-                                                             </svg>
-                                                            <span className="truncate">{source.title || source.uri}</span>
-                                                        </a>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         ))}
@@ -165,19 +142,18 @@ const AssistantModal: React.FC<AssistantModalProps> = ({ isOpen, onClose }) => {
                   </div>
                 )}
 
-
                 {/* Input */}
-                <div className="p-4 bg-surface dark:bg-darkSurface flex-shrink-0">
+                <div className="p-4 bg-surface dark:bg-darkSurface flex-shrink-0 pb-safe">
                     <div className="flex items-center space-x-3">
                         <input
                             type="text"
                             value={userInput}
                             onChange={(e) => setUserInput(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                            placeholder="Escribe tu pregunta..."
+                            placeholder="Pregunta sobre un tema bíblico..."
                             className="flex-grow appearance-none border border-separator dark:border-darkSeparator bg-gray-50 dark:bg-black/20 rounded-2xl w-full py-3.5 px-5 text-textPrimary dark:text-darkTextPrimary leading-tight focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                             disabled={isLoading}
-                            aria-label="Escribe tu pregunta para el asistente"
+                            aria-label="Escribe tu pregunta"
                         />
                         <button 
                             onClick={handleSend}

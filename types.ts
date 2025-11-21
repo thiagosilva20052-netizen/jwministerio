@@ -1,8 +1,7 @@
 
 export enum View {
   CALENDAR = 'CALENDAR',
-  SCHOOL = 'SCHOOL',
-  DUTIES = 'DUTIES',
+  MEETINGS = 'MEETINGS',
   SERVICE_LOG = 'SERVICE_LOG',
   SETTINGS = 'SETTINGS',
 }
